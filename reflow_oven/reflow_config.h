@@ -18,11 +18,23 @@
 
 /*------------------------------------------------------------------------*/
 
-#ifndef F_CPU
-#define F_CPU       16000000UL
+#define F_CPU 16000000UL
+#define __5V0__
+//#define __3V3__      // Either __5V0__ or __3V3__ selected at a time.
+
+/**************************************************************************/
+/*      WARNINGS                                                          */
+#ifdef __3V3__
+#if F_CPU > 8000000UL
+# warning "You are at risk of overclocking the ATMega328P."
+#endif
 #endif
 
-
+#ifdef __5V0__
+#if F_CPU > 16000000UL
+# warning "You are at risk of overclocking the ATMega328P."
+#endif
+#endif
 /**************************************************************************/
 /*
     LCD Pin Assignment
@@ -50,6 +62,10 @@
 
 /**************************************************************************/
 #define LCD_BACKLIGHT    1
+
+/**************************************************************************/
+
+
 
 #endif
 
