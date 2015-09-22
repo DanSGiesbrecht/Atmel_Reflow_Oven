@@ -23,12 +23,13 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
+
 /**************************************************************************/
 /*      GLOBAL VARIABLES                                                  */    
 extern volatile int encoderValue;
 
 /**************************************************************************/
-/*         TO DO:                                                         */
+/*         TODO                                                           */
 /*        @     
 */
 
