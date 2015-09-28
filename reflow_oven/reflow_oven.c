@@ -50,7 +50,7 @@ int main(void)
     encoder_pininit();
     
     DDRB |= (1 << LCD_BACKLIGHT);
-    PORTB|= (1 << LCD_BACKLIGHT);
+    PORTB|= (1 << LCD_BACKLIGHT);  
     
     /*  Enable global interrupts.               */
     sei();
