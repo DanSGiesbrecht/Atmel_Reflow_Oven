@@ -29,9 +29,9 @@
 
 #define ENCODER_PORT    PORTC
 #define ENCODER_PINS    PINC
-#define ENCODER_PINA    2
+#define ENCODER_PINA    0
 #define ENCODER_PINB    1
-#define ENCODER_PUSH    0
+#define ENCODER_PUSH    5
 
 /**************************************************************************/
 /*  Function:   Initialize the PCInterrupt pins for the specific MCU, 

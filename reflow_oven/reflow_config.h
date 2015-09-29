@@ -68,7 +68,8 @@
 #define LCD_RW_PIN       3            /**< pin  for RW line         */
 #define LCD_E_PORT       LCD_PORT     /**< port for Enable line     */
 #define LCD_E_PIN        4            /**< pin  for Enable line     */
-
+#define BACKLIGHT_PORT   PORTB
+#define LCD_BACKLIGHT    1
 #endif
 
 #ifdef _ATMEGA328_32TQFP_
@@ -88,6 +89,8 @@
 #define LCD_RW_PIN       3            /**< pin  for RW line         */
 #define LCD_E_PORT       LCD_PORT     /**< port for Enable line     */
 #define LCD_E_PIN        4            /**< pin  for Enable line     */
+#define BACKLIGHT_PORT   PORTB
+#define LCD_BACKLIGHT    1
 
 #endif
 /**************************************************************************/

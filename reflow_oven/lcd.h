@@ -214,7 +214,7 @@
 #define LCD_DELAY_INIT_4BIT   64      /**< delay in micro seconds after setting 4-bit mode */ 
 #endif
 #ifndef LCD_DELAY_BUSY_FLAG
-#define LCD_DELAY_BUSY_FLAG    4      /**< time in micro seconds the address counter is updated after busy flag is cleared */
+#define LCD_DELAY_BUSY_FLAG    4      /**< time in micro seconds the address counter is updated a fter busy flag is cleared */
 #endif
 #ifndef LCD_DELAY_ENABLE_PULSE
 #define LCD_DELAY_ENABLE_PULSE 1      /**< enable signal pulse width in micro seconds */
