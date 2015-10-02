@@ -37,11 +37,22 @@ extern volatile int encoderValue;
 
 int main()
 {
+    
+    /* !!! INITIALIZE !!! */
+    /* spi bus */
+    max31855_spi_init_master();
+    /* 16x2 LCD */
+    lcd_init(LCD_DISP_OFF);
+    /* rotary encoder*/
+    encoder_pininit();
+    /* system timer */
+    // TODO write timer functions
+    
     while(1)
     {
         // TODO check stuff.
         
-        // TODO sleep.
+        // TODO sleep for 1ms.
         
     }
     return 0;
