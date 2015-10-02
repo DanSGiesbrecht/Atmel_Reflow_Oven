@@ -70,6 +70,7 @@
 #define LCD_E_PIN        4            /**< pin  for Enable line     */
 #define BACKLIGHT_PORT   PORTB
 #define LCD_BACKLIGHT    1
+
 #endif
 
 #ifdef _ATMEGA328_32TQFP_

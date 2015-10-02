@@ -1,6 +1,6 @@
 /**************************************************************************/
 /*
- * reflow_oven.c
+ * reflow_oven_main.c
  *
  * Created: 7/13/2015 12:51:26 PM
  *  Author: dsgiesbrecht
@@ -31,9 +31,29 @@
 extern volatile int encoderValue;
 
 /**************************************************************************/
+/* MACROS                                                                 */
+#ifndef __DDR_MACROS__
+#define DDR(x) (*(&x - 1))      /* address of data direction register of port x */
+#if defined(__AVR_ATmega64__) || defined(__AVR_ATmega128__)
+/* on ATmega64/128 PINF is on port 0x00 and not 0x60 */
+#define PIN(x) ( &PORTF==&(x) ? _SFR_IO8(0x00) : (*(&x - 2)) )
+#else
+#define PIN(x) (*(&x - 2))    /* address of input register of port x          */
+#endif
+
+#endif
+/**************************************************************************/
 /*         TODO                                                           */
 /*        @     
 */
+
+/* Initialize the LCD Backlight */
+/* Write a 1 to turn backlight on, 0 to turn backlight off. */
+void _LCD_backlight_init(uint8_t);
+
+/* Write to LCD Backlight */
+/* Write a 1 to turn backlight on, 0 to turn backlight off. */
+void _LCD_backWrite(uint8_t LED_status);
 
 int main()
 {
@@ -43,6 +63,10 @@ int main()
     max31855_spi_init_master();
     /* 16x2 LCD */
     lcd_init(LCD_DISP_OFF);
+    /* Backlight */
+    _LCD_backlight_init(0);
+    # warning "function is not defined."
+    
     /* rotary encoder*/
     encoder_pininit();
     /* system timer */
@@ -124,7 +148,22 @@ int main(void)
     }
 }
 #endif
-// Test Main
+// main.c tests.
+
+/* Function Definitions */
+void _LCD_backlight_init(uint8_t LED_status)
+{
+    /* Set Backlight Pin as output */
+    DDR(BACKLIGHT_PORT) |= (1 << LCD_BACKLIGHT);
+    _LCD_backWrite(LED_status);
+}
+
+void _LCD_backWrite(uint8_t LED_status)
+{
+    uint8_t Protect = BACKLIGHT_PORT & ~(1 << LCD_BACKLIGHT);
+    uint8_t Change = (LED_status << LCD_BACKLIGHT);
+    BACKLIGHT_PORT = Protect | Change;
+}
 
 /**************************************************************************/
 /*                         END OF FILE                                    */
