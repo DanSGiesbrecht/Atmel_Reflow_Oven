@@ -23,6 +23,8 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
+#include <avr/power.h>
+#include <avr/sleep.h>
 
 /**************************************************************************/
 /*      GLOBAL VARIABLES                                                  */    
@@ -33,6 +35,20 @@ extern volatile int encoderValue;
 /*        @     
 */
 
+int main()
+{
+    while(1)
+    {
+        // TODO check stuff.
+        
+        // TODO sleep.
+        
+    }
+    return 0;
+}
+
+
+#if 0
 int main(void)
 {
     double current_tempval = 0.0;
@@ -96,7 +112,8 @@ int main(void)
         _delay_ms(100);
     }
 }
-
+#endif
+// Test Main
 
 /**************************************************************************/
 /*                         END OF FILE                                    */
