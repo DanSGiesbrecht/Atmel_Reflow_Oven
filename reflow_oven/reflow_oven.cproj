@@ -128,7 +128,7 @@
     <Compile Include="reflow_config.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="reflow_oven.c">
+    <Compile Include="reflow_oven_main.c">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

@@ -65,12 +65,14 @@ int main()
     lcd_init(LCD_DISP_OFF);
     /* Backlight */
     _LCD_backlight_init(0);
-    # warning "function is not defined."
-    
     /* rotary encoder*/
     encoder_pininit();
     /* system timer */
     // TODO write timer functions
+    
+    sei();
+    /* Allow peripherals to stabilize. */
+    _delay_ms(200);
     
     while(1)
     {
@@ -82,6 +84,9 @@ int main()
     return 0;
 }
 
+/**************************************************************************/
+/**************************************************************************/
+/**************************************************************************/
 
 #if 0
 int main(void)
@@ -150,6 +155,9 @@ int main(void)
 #endif
 // main.c tests.
 
+/**************************************************************************/
+/**************************************************************************/
+
 /* Function Definitions */
 void _LCD_backlight_init(uint8_t LED_status)
 {
@@ -161,8 +169,7 @@ void _LCD_backlight_init(uint8_t LED_status)
 void _LCD_backWrite(uint8_t LED_status)
 {
     uint8_t Protect = BACKLIGHT_PORT & ~(1 << LCD_BACKLIGHT);
-    uint8_t Change = (LED_status << LCD_BACKLIGHT);
-    BACKLIGHT_PORT = Protect | Change;
+    BACKLIGHT_PORT = Protect | (LED_status << LCD_BACKLIGHT);
 }
 
 /**************************************************************************/
