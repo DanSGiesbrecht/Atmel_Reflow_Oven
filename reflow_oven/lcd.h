@@ -46,7 +46,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
-#include "reflow_config.h"
+//#include "reflow_config.h"
 
 #if (__GNUC__ * 100 + __GNUC_MINOR__) < 405
 #error "This library requires AVR-GCC 4.5 or later, update to newer AVR-GCC compiler !"

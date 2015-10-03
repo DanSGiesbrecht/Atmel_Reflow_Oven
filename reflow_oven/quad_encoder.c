@@ -22,8 +22,8 @@
 /**************************************************************************/
 /**************************************************************************/
 
-#include <avr/interrupt.h>
-
+//#include <avr/interrupt.h>
+#include "reflow_config.h"
 #include "quad_encoder.h"
 
 #define DDR(x) (*(&x - 1))/* address of data direction register of port x */

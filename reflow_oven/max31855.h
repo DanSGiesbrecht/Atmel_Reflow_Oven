@@ -31,6 +31,12 @@
 #ifndef MAX31855_H
 #define MAX31855_H
 
+#include <inttypes.h>
+#include <avr/io.h>
+#include <avr/pgmspace.h>
+#include <util/delay.h>
+
+
 #ifndef SPI_PORT
 #define SPI_PORT    PORTB
 #endif

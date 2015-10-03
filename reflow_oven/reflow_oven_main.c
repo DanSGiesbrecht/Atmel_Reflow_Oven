@@ -15,13 +15,14 @@
 /**************************************************************************/
 
 #include "reflow_config.h"
+#include "reflow_oven_main.h"
 //#include "lcd.h"
 //#include "max31855.h"
 //#include "quad_encoder.h"
 
-#include <stdlib.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
+//#include <stdlib.h>
+//#include <avr/io.h>
+//#include <avr/pgmspace.h>
 //#include <util/delay.h>
 //#include <avr/power.h>
 //#include <avr/sleep.h>
