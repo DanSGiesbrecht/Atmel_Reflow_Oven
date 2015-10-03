@@ -16,6 +16,12 @@
 #ifndef REFLOW_CONFIG_H
 #define REFLOW_CONFIG_H
 
+
+#include <util/delay.h>
+#include "lcd.h"
+#include "max31855.h"
+#include "quad_encoder.h"
+
 /*------------------------------------------------------------------------*/
 /*-----------------------   HARDWARE DEFINES   ---------------------------*/
 /*** PROCESSOR PACKAGE ***/

@@ -15,16 +15,16 @@
 /**************************************************************************/
 
 #include "reflow_config.h"
-#include "lcd.h"
-#include "max31855.h"
-#include "quad_encoder.h"
+//#include "lcd.h"
+//#include "max31855.h"
+//#include "quad_encoder.h"
 
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
-#include <util/delay.h>
-#include <avr/power.h>
-#include <avr/sleep.h>
+//#include <util/delay.h>
+//#include <avr/power.h>
+//#include <avr/sleep.h>
 
 /**************************************************************************/
 /*      GLOBAL VARIABLES                                                  */    
@@ -42,6 +42,10 @@ extern volatile int encoderValue;
 #endif
 
 #endif
+
+
+/**************************************************************************/
+
 /**************************************************************************/
 /*         TODO                                                           */
 /*        @     
@@ -62,7 +66,7 @@ int main()
     /* spi bus */
     max31855_spi_init_master();
     /* 16x2 LCD */
-    lcd_init(LCD_DISP_OFF);
+    //lcd_init(LCD_DISP_ON);
     /* Backlight */
     _LCD_backlight_init(0);
     /* rotary encoder*/

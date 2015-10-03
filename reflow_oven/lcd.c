@@ -22,11 +22,12 @@
        See the C include lcd.h file for a description of each function
        
 *****************************************************************************/
-#include <inttypes.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
-#include <util/delay.h>
-#include "reflow_config.h"
+/* I put them in the header file. */
+//#include <inttypes.h>
+//#include <avr/io.h>
+//#include <avr/pgmspace.h>
+//#include <util/delay.h>
+//#include "reflow_config.h"
 #include "lcd.h"
 
 
