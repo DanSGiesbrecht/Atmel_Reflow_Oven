@@ -11,13 +11,15 @@
 
 #include <avr/eeprom.h>
 
-#define PROFILE_PARAMS    9
+#define NAMESIZE            14
+#define NUM_TIME_PARAMS     3
+#define NUM_TEMP_PARAMS     4
+
 enum time_params
 {
     Preheat_time = 0,
     Soak_time,
-    Reflow_time,
-    Cooldown_time
+    Reflow_time
 };
 
 enum temp_params
@@ -25,8 +27,7 @@ enum temp_params
     Preheat_tempMAX = 0,
     Soak_tempMAX,
     Reflow_tempMAX,
-    Cooldown_tempMAX,
-    Cooldown_tempMIN
+    Cooldown_tempMAX
 };
 
 #endif /* REFLOW_EEPROM_H_ */

@@ -119,6 +119,12 @@
     <Compile Include="max31855.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="ProfileFunctions.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ProfileFunctions.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="quad_encoder.c">
       <SubType>compile</SubType>
     </Compile>
@@ -126,6 +132,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="reflow_config.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="reflow_EEPROM.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="reflow_EEPROM.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="reflow_oven_main.c">

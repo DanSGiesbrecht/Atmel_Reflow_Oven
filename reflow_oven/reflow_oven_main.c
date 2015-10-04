@@ -16,6 +16,8 @@
 
 #include "reflow_config.h"
 #include "reflow_oven_main.h"
+
+/* INCLUDED ELSEWHERE */
 //#include "lcd.h"
 //#include "max31855.h"
 //#include "quad_encoder.h"
@@ -49,7 +51,7 @@ extern volatile int encoderValue;
 
 /**************************************************************************/
 /*         TODO                                                           */
-/*        @     
+/*        @     Move prototypes to reflow_oven_main.h
 */
 
 /* Initialize the LCD Backlight */

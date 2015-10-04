@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
+//#include <avr/eeprom.h>
 #include "lcd.h"
 #include "max31855.h"
 #include "quad_encoder.h"
