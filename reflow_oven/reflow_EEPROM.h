@@ -15,19 +15,31 @@
 #define NUM_TIME_PARAMS     3
 #define NUM_TEMP_PARAMS     4
 
-enum time_params
+
+enum EEPROM_area
+{
+    _Name = 0,
+    _Time,
+    _Temp,
+    _ALL
+};
+typedef enum EEPROM_area EEPROM_area;
+
+enum time_PARAMETER
 {
     Preheat_time = 0,
     Soak_time,
     Reflow_time
 };
 
-enum temp_params
+enum temp_PARAMETER
 {
     Preheat_tempMAX = 0,
     Soak_tempMAX,
     Reflow_tempMAX,
     Cooldown_tempMAX
 };
+
+
 
 #endif /* REFLOW_EEPROM_H_ */

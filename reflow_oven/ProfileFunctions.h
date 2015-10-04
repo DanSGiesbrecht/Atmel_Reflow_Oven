@@ -20,14 +20,20 @@ typedef struct profile_struct
 } Profile;
 
 
-void update_Profile(Profile *_prof, uint8_t **eeprom_ptr);
-/*  Pass in 'working_profile', and the array of eeprom ptrs (eeprom_ptr) to update working profile values.          */
+void update_Profile(Profile *_prof, uint8_t **eeprom_ptr, EEPROM_area select);
+/*
+*   Requires:
+*       -Profile address
+*       -the array of EEPROM pointers (eeprom_ptr)
+*       -Which EEPROM area to update: (_ALL | _Name | _Time | _Temp )
+*
+*   Promises:
+*       -To update the Profile with values from the selected EEPROM area.
+*/
 
-uint8_t get_Profile_time_param(Profile *_prof, uint8_t PARAMETER);
+uint8_t get_Profile_param(Profile *_prof, uint8_t param, EEPROM_area select);
 
-uint8_t get_Profile_temp_param(Profile *_prof, uint8_t PARAMETER);
-
-
+void store_EEPROM(uint8_t update_value, uint8_t *eeprom_ptr, uint8_t param);
 
 
 #endif /* PROFILEFUNCTIONS_H_ */

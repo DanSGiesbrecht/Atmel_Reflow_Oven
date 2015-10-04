@@ -29,6 +29,9 @@
 //#include <avr/power.h>
 //#include <avr/sleep.h>
 
+/* for testing*/
+#include <stdio.h>
+
 /**************************************************************************/
 /*      GLOBAL VARIABLES                                                  */    
 extern volatile int encoderValue;
@@ -54,14 +57,9 @@ extern volatile int encoderValue;
 /*        @     Move prototypes to reflow_oven_main.h
 */
 
-/* Initialize the LCD Backlight */
-/* Write a 1 to turn backlight on, 0 to turn backlight off. */
-void _LCD_backlight_init(uint8_t);
 
-/* Write to LCD Backlight */
-/* Write a 1 to turn backlight on, 0 to turn backlight off. */
-void _LCD_backWrite(uint8_t LED_status);
-
+/* FINAL MAIN */
+#if 0
 int main()
 {
     
@@ -90,11 +88,11 @@ int main()
     }
     return 0;
 }
-
+#endif
 /**************************************************************************/
 /**************************************************************************/
 /**************************************************************************/
-
+// main.c tests.
 #if 0
 int main(void)
 {
@@ -159,8 +157,61 @@ int main(void)
         _delay_ms(100);
     }
 }
+#endif 
+
+#if 1
+
+extern uint8_t *profile1_ptr[];
+
+int main()
+{
+    Profile test_Profile;
+    char tempstring[16];
+    //uint8_t tempint;
+    //char tempchar[2];
+    
+    lcd_init(LCD_DISP_ON);
+    _LCD_backlight_init(0);
+    _delay_ms(500);
+    _LCD_backWrite(1);
+    _delay_ms(500);
+    _LCD_backWrite(0);
+    _delay_ms(500);
+    _LCD_backWrite(1);
+    _delay_ms(600);
+    
+    lcd_clrscr();
+    
+    update_Profile(&test_Profile, profile1_ptr, _Name);
+    
+    lcd_puts("hello world");
+    _delay_ms(1000);
+    lcd_gotoxy(0,1);
+    
+    for (uint8_t i=0; i<14; i++)
+    {
+        if (test_Profile.name[i] != '\0')
+        {
+            tempstring[i] = test_Profile.name[i];
+        }
+        else
+        {
+            tempstring[i] = '\0';
+            break;
+        }
+        lcd_putc(tempstring[i]);
+    }
+
+    while(1)
+    {
+        lcd_gotoxy(0,1);
+        lcd_puts(tempstring);
+        //printf("EEPROM string: %s", tempstring);
+        _delay_ms(100);
+    }    
+    return 0;
+}
 #endif
-// main.c tests.
 
 /**************************************************************************/
 /**************************************************************************/

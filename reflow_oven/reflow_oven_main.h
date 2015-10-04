@@ -22,3 +22,15 @@
 #include "lcd.h"
 #include "max31855.h"
 #include "quad_encoder.h"
+#include "ProfileFunctions.h"
+#include "reflow_EEPROM.h"
+
+/* PROTOTYPES */
+
+/* Initialize the LCD Backlight */
+/* Write a 1 to turn backlight on, 0 to turn backlight off. */
+void _LCD_backlight_init(uint8_t);
+
+/* Write to LCD Backlight */
+/* Write a 1 to turn backlight on, 0 to turn backlight off. */
+void _LCD_backWrite(uint8_t LED_status);
