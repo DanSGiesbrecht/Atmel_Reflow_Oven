@@ -46,7 +46,7 @@ void update_Profile(Profile *_prof, uint8_t **eeprom_ptr, EEPROM_area select)
     
     if (select == _ALL || select == _Temp)
     {
-        uint8_t SRAM_temp_array[NUM_TEMP_PARAMS];
+        char SRAM_temp_array[NUM_TEMP_PARAMS];
         eeprom_read_block((void*)SRAM_temp_array, (const void*)(eeprom_ptr[2]), NUM_TEMP_PARAMS);
         /* Copy values from temorary SRAM array into working copy of Profile */
         for (uint8_t i=0; i < NUM_TEMP_PARAMS; i++)
@@ -70,7 +70,7 @@ uint8_t get_Profile_param(Profile *_prof, uint8_t param, EEPROM_area select)
         return (_prof->Temp_array[param]);
         break;
         /* Can't use for name array. */
-    default:
+    case _Name:
         if (select == _Name)
         {
             return 0;

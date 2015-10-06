@@ -188,6 +188,8 @@ int main()
     _delay_ms(1000);
     lcd_gotoxy(0,1);
     
+    /*this code works, but so does lcd_puts(test_Profile.name); */
+    /*
     for (uint8_t i=0; i<14; i++)
     {
         if (test_Profile.name[i] != '\0')
@@ -201,12 +203,13 @@ int main()
         }
         lcd_putc(tempstring[i]);
     }
-
+*/
+    lcd_puts(test_Profile.name);
+    
     while(1)
     {
         lcd_gotoxy(0,1);
         lcd_puts(tempstring);
-        //printf("EEPROM string: %s", tempstring);
         _delay_ms(100);
     }    
     return 0;
@@ -229,6 +232,8 @@ void _LCD_backWrite(uint8_t LED_status)
     uint8_t Protect = BACKLIGHT_PORT & ~(1 << LCD_BACKLIGHT);
     BACKLIGHT_PORT = Protect | (LED_status << LCD_BACKLIGHT);
 }
+
+
 
 /**************************************************************************/
 /*                         END OF FILE                                    */

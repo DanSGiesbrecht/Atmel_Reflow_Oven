@@ -13,7 +13,7 @@
 
 typedef struct profile_struct
 {
-    uint8_t name[NAMESIZE];
+    char name[NAMESIZE];
     uint8_t Time_array[NUM_TIME_PARAMS];
     uint8_t Temp_array[NUM_TEMP_PARAMS];
     
