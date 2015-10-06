@@ -31,6 +31,8 @@ enum time_PARAMETER
     Soak_time,
     Reflow_time
 };
+//typedef enum time_PARAMETER reflow_Parameter;
+/* is this legal? */
 
 enum temp_PARAMETER
 {
@@ -39,7 +41,7 @@ enum temp_PARAMETER
     Reflow_tempMAX,
     Cooldown_tempMAX
 };
-
-
+//typedef enum time_PARAMETER reflow_Parameter;
+/* is this legal? */
 
 #endif /* REFLOW_EEPROM_H_ */

@@ -33,7 +33,7 @@
 //#include <avr/pgmspace.h>
 //#include <util/delay.h>
 
-#include "reflow_config.h"
+#include "ATMEGA328P_reflow_config.h"
 #include "max31855.h"
 
 /* MACROS */

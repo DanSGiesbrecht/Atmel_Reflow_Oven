@@ -14,7 +14,7 @@
 /**************************************************************************/
 /**************************************************************************/
 
-#include "reflow_config.h"
+#include "ATMEGA328P_reflow_config.h"
 #include "reflow_oven_main.h"
 
 /* INCLUDED ELSEWHERE */
@@ -28,9 +28,14 @@
 //#include <util/delay.h>
 //#include <avr/power.h>
 //#include <avr/sleep.h>
-
+/**************************************************************************/
 /* for testing*/
-#include <stdio.h>
+//#include <stdio.h>
+//#define FINAL_MAIN_
+//#define MAIN_TEST_1_
+#define MAIN_TEST_2_
+
+
 
 /**************************************************************************/
 /*      GLOBAL VARIABLES                                                  */    
@@ -53,29 +58,17 @@ extern volatile int encoderValue;
 /**************************************************************************/
 
 /**************************************************************************/
-/*         TODO                                                           */
-/*        @     Move prototypes to reflow_oven_main.h
+/*         TODO                                                           
+*        @     Create State Machines.
+*
 */
 
 
 /* FINAL MAIN */
-#if 0
+#ifdef FINAL_MAIN_
 int main()
 {
-    
-    /* !!! INITIALIZE !!! */
-    /* spi bus */
-    max31855_spi_init_master();
-    /* 16x2 LCD */
-    //lcd_init(LCD_DISP_ON);
-    /* Backlight */
-    _LCD_backlight_init(0);
-    /* rotary encoder*/
-    encoder_pininit();
-    /* system timer */
-    // TODO write timer functions
-    
-    sei();
+    ATMEGA328_init();
     /* Allow peripherals to stabilize. */
     _delay_ms(200);
     
@@ -93,7 +86,7 @@ int main()
 /**************************************************************************/
 /**************************************************************************/
 // main.c tests.
-#if 0
+#ifdef MAIN_TEST_1_
 int main(void)
 {
     double current_tempval = 0.0;
@@ -118,7 +111,7 @@ int main(void)
     /*  Allow time for hardware peripherals to 
         stabilize.                              */
     _delay_ms(500);
-    
+    /**************************************************************************/
     /*  Get inital temperature reading          */
     old_tempval = max31855_readCelsius();
     
@@ -159,19 +152,20 @@ int main(void)
 }
 #endif 
 
-#if 1
+#ifdef MAIN_TEST_2_
 
 extern uint8_t *profile1_ptr[];
 
 int main()
 {
     Profile test_Profile;
-    char tempstring[16];
+    //char tempstring[16];
     //uint8_t tempint;
     //char tempchar[2];
     
     lcd_init(LCD_DISP_ON);
     _LCD_backlight_init(0);
+    /* Flash Backlight */
     _delay_ms(500);
     _LCD_backWrite(1);
     _delay_ms(500);
@@ -187,31 +181,9 @@ int main()
     lcd_puts("hello world");
     _delay_ms(1000);
     lcd_gotoxy(0,1);
+  
+    lcd_puts(test_Profile.name);    // this works well.
     
-    /*this code works, but so does lcd_puts(test_Profile.name); */
-    /*
-    for (uint8_t i=0; i<14; i++)
-    {
-        if (test_Profile.name[i] != '\0')
-        {
-            tempstring[i] = test_Profile.name[i];
-        }
-        else
-        {
-            tempstring[i] = '\0';
-            break;
-        }
-        lcd_putc(tempstring[i]);
-    }
-*/
-    lcd_puts(test_Profile.name);
-    
-    while(1)
-    {
-        lcd_gotoxy(0,1);
-        lcd_puts(tempstring);
-        _delay_ms(100);
-    }    
     return 0;
 }
 #endif
@@ -233,8 +205,26 @@ void _LCD_backWrite(uint8_t LED_status)
     BACKLIGHT_PORT = Protect | (LED_status << LCD_BACKLIGHT);
 }
 
-
-
+void ATMEGA328_init()
+{
+    /*  Initialise the peripherals      */
+    
+    /*  LCD         */
+    lcd_init(LCD_DISP_ON);
+    _LCD_backlight_init(BACKLIGHT_ON);
+    /*  MAX31855    */
+    max31855_spi_init_master();
+    /*  ENCODER     */
+    encoder_pininit();
+    
+    /* system timer */
+    // TODO:: write timer functions
+    
+    /* Interrupts   */
+    // Or do this inside the specific source files?
+    
+    sei();
+}
 /**************************************************************************/
 /*                         END OF FILE                                    */
 /**************************************************************************/

@@ -27,7 +27,7 @@
 //#include <avr/io.h>
 //#include <avr/pgmspace.h>
 //#include <util/delay.h>
-#include "reflow_config.h"
+#include "ATMEGA328P_reflow_config.h"
 #include "lcd.h"
 
 

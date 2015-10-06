@@ -25,6 +25,9 @@
 #include "ProfileFunctions.h"
 #include "reflow_EEPROM.h"
 
+#define BACKLIGHT_ON    1
+#define BACKLIGHT_OFF   0
+
 /* PROTOTYPES */
 
 /* Initialize the LCD Backlight */
@@ -34,3 +37,7 @@ void _LCD_backlight_init(uint8_t);
 /* Write to LCD Backlight */
 /* Write a 1 to turn backlight on, 0 to turn backlight off. */
 void _LCD_backWrite(uint8_t LED_status);
+
+/* Initialise the ATMega328P chip. This calls all initialise functions. */
+/* Enable interrupts.                                                   */
+void ATMEGA328_init(void);

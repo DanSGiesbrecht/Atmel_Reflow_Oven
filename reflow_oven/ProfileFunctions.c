@@ -20,7 +20,7 @@ void update_Profile(Profile *_prof, uint8_t **eeprom_ptr, EEPROM_area select)
     if (select == _ALL || select == _Name )
     {
         uint8_t SRAM_name_array[NAMESIZE];
-        eeprom_read_block((void*)SRAM_name_array, (const void*)(eeprom_ptr[0]), NAMESIZE);
+        eeprom_read_block((void*)SRAM_name_array, (const void*)(eeprom_ptr[_Name]), NAMESIZE);
         /* Copy values from temorary SRAM array into working copy of Profile */
         for (uint8_t i=0; i < NAMESIZE; i++)
         {
@@ -35,7 +35,7 @@ void update_Profile(Profile *_prof, uint8_t **eeprom_ptr, EEPROM_area select)
     if (select == _ALL || select == _Time)
     {
         uint8_t SRAM_time_array[NUM_TIME_PARAMS];
-        eeprom_read_block((void*)SRAM_time_array, (const void*)(eeprom_ptr[1]), NUM_TIME_PARAMS);
+        eeprom_read_block((void*)SRAM_time_array, (const void*)(eeprom_ptr[_Time]), NUM_TIME_PARAMS);
         /* Copy values from temorary SRAM array into working copy of Profile */
         for (uint8_t i=0; i < NUM_TIME_PARAMS; i++)
         {
@@ -47,7 +47,7 @@ void update_Profile(Profile *_prof, uint8_t **eeprom_ptr, EEPROM_area select)
     if (select == _ALL || select == _Temp)
     {
         char SRAM_temp_array[NUM_TEMP_PARAMS];
-        eeprom_read_block((void*)SRAM_temp_array, (const void*)(eeprom_ptr[2]), NUM_TEMP_PARAMS);
+        eeprom_read_block((void*)SRAM_temp_array, (const void*)(eeprom_ptr[_Temp]), NUM_TEMP_PARAMS);
         /* Copy values from temorary SRAM array into working copy of Profile */
         for (uint8_t i=0; i < NUM_TEMP_PARAMS; i++)
         {
@@ -58,7 +58,7 @@ void update_Profile(Profile *_prof, uint8_t **eeprom_ptr, EEPROM_area select)
     return;
 }
 
-
+#if 0       // I don't think I need this function.
 uint8_t get_Profile_param(Profile *_prof, uint8_t param, EEPROM_area select)
 {
     switch (select)
@@ -78,8 +78,30 @@ uint8_t get_Profile_param(Profile *_prof, uint8_t param, EEPROM_area select)
     }
     return 0;
 }
+#endif
 
-void store_EEPROM(uint8_t update_value, uint8_t *eeprom_ptr, uint8_t param)
+void store_EEPROM(Profile *_prof, uint8_t which_parameter, uint8_t **eeprom_ptr, EEPROM_area select)
 {
-    #warning "Incomplete code"
+    /* STUB */
+    /* Description in prototype. */
+    #warning "Incomplete code!!!"
+    switch (select)
+    {
+        case _Name:
+        #warning("not currently available")
+        break;
+        
+        case _Time:
+        
+        break;
+        
+        case _Temp:
+        
+        break;
+        
+        case _ALL:
+        return;
+        break;
+    }
+    
 }    
