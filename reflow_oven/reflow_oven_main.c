@@ -40,6 +40,8 @@
 /**************************************************************************/
 /*      GLOBAL VARIABLES                                                  */    
 extern volatile int encoderValue;
+volatile uint8_t schedule_lock = 0;
+volatile uint32_t millis = 0;
 
 /**************************************************************************/
 /* MACROS                                                                 */
@@ -59,7 +61,7 @@ extern volatile int encoderValue;
 
 /**************************************************************************/
 /*         TODO                                                           
-*        @     Create State Machines.
+*        @     Create State Machines/scheduler & tasks.
 *
 */
 
@@ -74,11 +76,16 @@ int main()
     
     while(1)
     {
+        // sleep for 1ms.
+        Enter_Sleep_Mode();
         // TODO check stuff.
         
-        // TODO sleep for 1ms.
-        
+        if (schedule_lock == 0)     // if timer ISR woke up uC.
+        {
+            /* Run Scheduled tasks */
+        }
     }
+    
     return 0;
 }
 #endif
@@ -207,6 +214,7 @@ void _LCD_backWrite(uint8_t LED_status)
 
 void ATMEGA328_init()
 {
+    cli();
     /*  Initialise the peripherals      */
     
     /*  LCD         */
@@ -218,12 +226,58 @@ void ATMEGA328_init()
     encoder_pininit();
     
     /* system timer */
-    // TODO:: write timer functions
+    AT328_SysTick_init();
+    
+    Sleep_Mode_init();
     
     /* Interrupts   */
     // Or do this inside the specific source files?
     
     sei();
+}
+
+void Sleep_Mode_init()
+{
+    set_sleep_mode(SLEEP_MODE_IDLE);
+}
+
+void Enter_Sleep_Mode()
+{
+     cli();
+     if (sleep_condition)
+     {
+         schedule_lock = 1;
+         
+         sleep_enable();
+         sei();
+         sleep_cpu();
+         sleep_disable();
+     }
+     sei();
+}
+
+void AT328_SysTick_init()
+{
+    /* Systick = 0.001s */
+    /* Disable global interrupts    */
+    TCCR2A = 0;
+    TCCR2B = 0;
+    
+    /*  Set Prescaler               */
+    TCCR2B |= TIMER2_PRESCALE_BITSHIFT;    
+    /*  Set compareA register value */
+    OCR2A = TOTAL_TICKS;
+    /*  Set CTC Mode                */
+    TCCR2A |= TIMER2_CTC_BITSHIFT;
+    /*  Enable CompareA Interrupt   */
+    TIMSK2 |= OCIE2A;
+ 
+}
+
+ISR(TIMER2_COMPA_vect)
+{
+    schedule_lock = 0;
+    millis++;
 }
 /**************************************************************************/
 /*                         END OF FILE                                    */

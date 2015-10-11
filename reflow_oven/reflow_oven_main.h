@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
-//#include <avr/eeprom.h>
+#include <avr/sleep.h>
 #include "lcd.h"
 #include "max31855.h"
 #include "quad_encoder.h"
@@ -41,3 +41,11 @@ void _LCD_backWrite(uint8_t LED_status);
 /* Initialise the ATMega328P chip. This calls all initialise functions. */
 /* Enable interrupts.                                                   */
 void ATMEGA328_init(void);
+
+void Sleep_Mode_init();
+
+/* Put the AVR uC into selected sleep mode. */
+void Enter_Sleep_Mode();
+
+/* Initialize the system tick (timer2)      */
+void AT328_SysTick_init();

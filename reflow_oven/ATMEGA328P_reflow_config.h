@@ -29,6 +29,30 @@
 #define __5V0__
 //#define __3V3__      // Either __5V0__ or __3V3__ selected at a time.
 
+/* ------------------------ TIMER2 PRESCALER ---------------------------- */
+/* 1ms ticks    */
+#ifndef TIMER2_PRESCALE_BITSHIFT
+#define TIMER2_PRESCALE_BITSHIFT    (0x1 <<CS22)    // clk/64
+#endif
+#ifndef TIMER2_CTC_BITSHIFT
+#define TIMER2_CTC_BITSHIFT         (0x1 << WGM21)  // CTC MODE
+#endif
+
+#ifdef F_CPU    8000000UL
+/* 1 ms ticks */
+#ifndef TOTAL_TICKS
+#define TOTAL_TICKS     125
+#endif
+
+#endif
+
+#ifdef F_CPU    16000000UL
+/* 1 ms ticks */
+#ifndef TOTAL_TICKS
+#define TOTAL_TICKS     125
+#endif
+
+#endif
 /**************************************************************************/
 /*--------------------------  WARNINGS  ----------------------------------*/
 #ifdef __3V3__
