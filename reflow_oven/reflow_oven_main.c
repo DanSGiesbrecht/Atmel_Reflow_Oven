@@ -31,9 +31,9 @@
 /**************************************************************************/
 /* for testing*/
 //#include <stdio.h>
-//#define FINAL_MAIN_
+#define FINAL_MAIN_
 //#define MAIN_TEST_1_
-#define MAIN_TEST_2_
+//#define MAIN_TEST_2_
 
 
 
@@ -64,6 +64,26 @@ volatile uint32_t millis = 0;
 *        @     Create State Machines/scheduler & tasks.
 *
 */
+/**************************************************************************/
+/************ SCHEDULER TASKS *********************************************/
+#define NUM_TASKS   3
+task_t Tasks[NUM_TASKS] =
+{
+    {
+        //example task, period, offset.
+    },
+    
+    {
+        //example task, period, offset.
+    },
+    
+    {
+        //example task, period, offset.
+    }
+    
+};
+
+
 
 
 /* FINAL MAIN */
@@ -76,18 +96,31 @@ int main()
     
     while(1)
     {
+        uint8_t i;
         // sleep for 1ms.
-        Enter_Sleep_Mode();
+        Enter_Sleep_Mode(1);
         // TODO check stuff.
         
         if (schedule_lock == 0)     // if timer ISR woke up uC.
         {
             /* Run Scheduled tasks */
+            for(i = 0; i < NUM_TASKS; i++)
+            {
+                if (Tasks[i].task_delay == 0)
+                {
+                    Tasks[i].task_delay = Tasks[i].task_period - 1;
+                    (Tasks[i].task_function)(&Tasks[i]);
+                }
+                else
+                {
+                    Tasks[i].task_delay--;
+                }
+            }
         }
-    }
+    }// end while(1);
     
     return 0;
-}
+}// end main();
 #endif
 /**************************************************************************/
 /**************************************************************************/
@@ -226,7 +259,7 @@ void ATMEGA328_init()
     encoder_pininit();
     
     /* system timer */
-    AT328_SysTick_init();
+    AT328_SysTick_Init();
     
     Sleep_Mode_init();
     
@@ -241,7 +274,7 @@ void Sleep_Mode_init()
     set_sleep_mode(SLEEP_MODE_IDLE);
 }
 
-void Enter_Sleep_Mode()
+void Enter_Sleep_Mode(uint8_t sleep_condition)
 {
      cli();
      if (sleep_condition)
@@ -256,7 +289,7 @@ void Enter_Sleep_Mode()
      sei();
 }
 
-void AT328_SysTick_init()
+void AT328_SysTick_Init()
 {
     /* Systick = 0.001s */
     /* Disable global interrupts    */
@@ -270,8 +303,21 @@ void AT328_SysTick_init()
     /*  Set CTC Mode                */
     TCCR2A |= TIMER2_CTC_BITSHIFT;
     /*  Enable CompareA Interrupt   */
-    TIMSK2 |= OCIE2A;
+    TIMSK2 |= (0x1 << OCIE2A);
  
+}
+
+void AT328_SysTick_Start()
+{
+    /*  Enable CompareA Interrupt   */
+    TIMSK2 |= (0x1 << OCIE2A);
+}
+
+void AT328_SysTick_Stop()
+{
+    /*  Disable CompareA Interrupt */
+    TIMSK2 &= ~(0x1 << OCIE2A);
+    /* For use with Deep Sleep Mode */
 }
 
 ISR(TIMER2_COMPA_vect)

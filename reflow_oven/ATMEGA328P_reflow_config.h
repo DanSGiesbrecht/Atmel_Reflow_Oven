@@ -24,6 +24,7 @@
 
 /*** CLOCK FREQUENCY ****/
 #define F_CPU 16000000UL
+//#define F_CPU 8000000UL
 
 /*** VOLTAGE SOURCE ****/
 #define __5V0__
@@ -37,21 +38,8 @@
 #ifndef TIMER2_CTC_BITSHIFT
 #define TIMER2_CTC_BITSHIFT         (0x1 << WGM21)  // CTC MODE
 #endif
-
-#ifdef F_CPU    8000000UL
-/* 1 ms ticks */
 #ifndef TOTAL_TICKS
-#define TOTAL_TICKS     125
-#endif
-
-#endif
-
-#ifdef F_CPU    16000000UL
-/* 1 ms ticks */
-#ifndef TOTAL_TICKS
-#define TOTAL_TICKS     125
-#endif
-
+#define TOTAL_TICKS     250         // for 16MHz: 250. for 8MHz: 125.
 #endif
 /**************************************************************************/
 /*--------------------------  WARNINGS  ----------------------------------*/
