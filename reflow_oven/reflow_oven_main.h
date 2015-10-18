@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
-#include <avr/sleep.h>
+//#include <avr/sleep.h>
 #include "lcd.h"
 #include "max31855.h"
 #include "quad_encoder.h"
@@ -43,6 +43,7 @@ void _LCD_backWrite(uint8_t LED_status);
 /* Enable interrupts.                                                   */
 void ATMEGA328_init(void);
 
+#if 0
 void Sleep_Mode_init();
 
 /* Put the AVR uC into selected sleep mode. */
@@ -60,7 +61,7 @@ void AT328_SysTick_Stop();
 /* Unlock scheduler, increment millis,      */
 /* and wake up the processor.               */
 ISR(TIMER2_COMPA_vect);
-
+#endif
 
 /****************************** STRUCTS ************************************/
 /* Function pointer for task array. */

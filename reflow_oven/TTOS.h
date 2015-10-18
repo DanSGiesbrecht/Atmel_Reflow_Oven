@@ -9,6 +9,12 @@
 #ifndef TTOS_H_
 #define TTOS_H_
 
+#include <stdlib.h>
+#include <avr/io.h>
+#include <avr/sleep.h>
+#include <avr/interrupt.h>
+
+
 /* PROTOTYPES */
 /*********************************************/
 void Sleep_Mode_init();
@@ -33,12 +39,19 @@ ISR(TIMER2_COMPA_vect);
 /* Task Struct */
 typedef struct task_t
 {
-    volatile void (*task_function)(struct task_t *task_ptr);       /* function pointer         */
+    volatile void (*task_function)(void);                           /* function pointer         */
     uint32_t        task_period;                                   /* period in ticks          */
     uint32_t        task_delay;                                    /* init offset in ticks     */
+    struct task_t *next;
 } task_t;
 
 
+
+/******* THREAD STUFF ***********************/
+void DispatchThreads();
+void DispatchThreads_linkedlist();
+uint8_t AddThread(task_t *ptr);
+/*********************************************/
 
 #endif /* TTOS_H_ */
 

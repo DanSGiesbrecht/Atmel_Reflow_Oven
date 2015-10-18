@@ -149,7 +149,10 @@
     <Compile Include="reflow_oven_main.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="reflow_statemachines.c">
+    <Compile Include="TTOS.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="TTOS.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

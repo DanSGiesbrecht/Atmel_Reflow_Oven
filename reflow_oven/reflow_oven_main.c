@@ -40,8 +40,7 @@
 /**************************************************************************/
 /*      GLOBAL VARIABLES                                                  */    
 extern volatile int encoderValue;
-volatile uint8_t schedule_lock = 0;
-volatile uint32_t millis = 0;
+extern volatile uint32_t millis;
 
 /**************************************************************************/
 /* MACROS                                                                 */
@@ -66,24 +65,6 @@ volatile uint32_t millis = 0;
 */
 /**************************************************************************/
 /************ SCHEDULER TASKS *********************************************/
-#define NUM_TASKS   3
-task_t Tasks[NUM_TASKS] =
-{
-    {
-        //example task, period, offset.
-    },
-    
-    {
-        //example task, period, offset.
-    },
-    
-    {
-        //example task, period, offset.
-    }
-    
-};
-
-
 
 
 /* FINAL MAIN */
@@ -101,22 +82,7 @@ int main()
         Enter_Sleep_Mode(1);
         // TODO check stuff.
         
-        if (schedule_lock == 0)     // if timer ISR woke up uC.
-        {
-            /* Run Scheduled tasks */
-            for(i = 0; i < NUM_TASKS; i++)
-            {
-                if (Tasks[i].task_delay == 0)
-                {
-                    Tasks[i].task_delay = Tasks[i].task_period - 1;
-                    (Tasks[i].task_function)(&Tasks[i]);
-                }
-                else
-                {
-                    Tasks[i].task_delay--;
-                }
-            }
-        }
+        DispatchThreads_linkedlist();
     }// end while(1);
     
     return 0;
@@ -269,6 +235,7 @@ void ATMEGA328_init()
     sei();
 }
 
+#if 0
 void Sleep_Mode_init()
 {
     set_sleep_mode(SLEEP_MODE_IDLE);
@@ -325,6 +292,7 @@ ISR(TIMER2_COMPA_vect)
     schedule_lock = 0;
     millis++;
 }
+#endif
 /**************************************************************************/
 /*                         END OF FILE                                    */
 /**************************************************************************/
