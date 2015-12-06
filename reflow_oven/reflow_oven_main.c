@@ -59,12 +59,6 @@ extern volatile uint32_t millis;
 /**************************************************************************/
 
 /**************************************************************************/
-/*         TODO                                                           
-*        @     Create State Machines/scheduler & tasks.
-*
-*/
-/**************************************************************************/
-/************ SCHEDULER TASKS *********************************************/
 
 
 /* FINAL MAIN */
@@ -74,15 +68,34 @@ int main()
     ATMEGA328_init();
     /* Allow peripherals to stabilize. */
     _delay_ms(200);
-    
+    char *message = {"Unhook Heater!"};
+    //lcd_puts(message);
+    HeaterSet(ON);
+    _delay_ms(500);
+    AT328_SysTick_Start();
     while(1)
     {
-        uint8_t i;
+        /* DO STUFF */
+        
+        
+        
+        
+        
+        
+        
+        /********** GO TO SLEEP **************/
+        /* The fan pin and connected LED are being used as the heartbeat,
+        because there is no fan connected yet, and there is no other unused onboard LED
+        */
+        // Turn off LED before sleeping.
+        FanSet(OFF);
+        
         // sleep for 1ms.
         Enter_Sleep_Mode(1);
-        // TODO check stuff.
+        // Turn on LED after sleeping.
+        FanSet(ON);
+        /************************************/
         
-        DispatchThreads_linkedlist();
     }// end while(1);
     
     return 0;
@@ -214,16 +227,20 @@ void _LCD_backWrite(uint8_t LED_status)
 void ATMEGA328_init()
 {
     cli();
-    /*  Initialise the peripherals      */
+    /*  Initialize the peripherals      */
     
     /*  LCD         */
     lcd_init(LCD_DISP_ON);
     _LCD_backlight_init(BACKLIGHT_ON);
+    
     /*  MAX31855    */
     max31855_spi_init_master();
     /*  ENCODER     */
     encoder_pininit();
-    
+    /* HEATER */
+    Heater_Init();
+    /* FAN    */
+    Fan_Init();
     /* system timer */
     AT328_SysTick_Init();
     
@@ -235,7 +252,7 @@ void ATMEGA328_init()
     sei();
 }
 
-#if 0
+
 void Sleep_Mode_init()
 {
     set_sleep_mode(SLEEP_MODE_IDLE);
@@ -246,8 +263,6 @@ void Enter_Sleep_Mode(uint8_t sleep_condition)
      cli();
      if (sleep_condition)
      {
-         schedule_lock = 1;
-         
          sleep_enable();
          sei();
          sleep_cpu();
@@ -259,7 +274,6 @@ void Enter_Sleep_Mode(uint8_t sleep_condition)
 void AT328_SysTick_Init()
 {
     /* Systick = 0.001s */
-    /* Disable global interrupts    */
     TCCR2A = 0;
     TCCR2B = 0;
     
@@ -269,8 +283,9 @@ void AT328_SysTick_Init()
     OCR2A = TOTAL_TICKS;
     /*  Set CTC Mode                */
     TCCR2A |= TIMER2_CTC_BITSHIFT;
-    /*  Enable CompareA Interrupt   */
-    TIMSK2 |= (0x1 << OCIE2A);
+    
+    /*  Enable CompareA Interrupt (this is done in a separate funciton.  */
+    //TIMSK2 |= (0x1 << OCIE2A);
  
 }
 
@@ -289,10 +304,8 @@ void AT328_SysTick_Stop()
 
 ISR(TIMER2_COMPA_vect)
 {
-    schedule_lock = 0;
-    millis++;
+    //millis++; TODO: clean up later.
 }
-#endif
 /**************************************************************************/
 /*                         END OF FILE                                    */
 /**************************************************************************/

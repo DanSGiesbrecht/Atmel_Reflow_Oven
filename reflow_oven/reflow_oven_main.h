@@ -18,13 +18,14 @@
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
-//#include <avr/sleep.h>
+#include <avr/sleep.h>
 #include "lcd.h"
 #include "max31855.h"
 #include "quad_encoder.h"
 #include "ProfileFunctions.h"
 #include "reflow_EEPROM.h"
-#include "TTOS.h"
+#include "reflow_HeaterControl.h"
+
 
 #define BACKLIGHT_ON    1
 #define BACKLIGHT_OFF   0
@@ -43,7 +44,7 @@ void _LCD_backWrite(uint8_t LED_status);
 /* Enable interrupts.                                                   */
 void ATMEGA328_init(void);
 
-#if 0
+
 void Sleep_Mode_init();
 
 /* Put the AVR uC into selected sleep mode. */
@@ -58,21 +59,7 @@ void AT328_SysTick_Start();
 /* Disable CompareA Interrupt.              */
 void AT328_SysTick_Stop();
 
-/* Unlock scheduler, increment millis,      */
-/* and wake up the processor.               */
+
 ISR(TIMER2_COMPA_vect);
-#endif
 
 /****************************** STRUCTS ************************************/
-/* Function pointer for task array. */
-//typedef volatile void (*task_function_t)(void);
-
-#if 0
-/* Task Struct */
-typedef struct task_t
-{
-    volatile void (*task_function)(struct task_t *task_ptr);       /* function pointer         */
-    uint32_t        task_period;                                   /* period in ticks          */
-    uint32_t        task_delay;                                    /* init offset in ticks     */
-} task_t;
-#endif

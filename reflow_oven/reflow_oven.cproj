@@ -143,16 +143,16 @@
     <Compile Include="reflow_EEPROM.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="reflow_HeaterControl.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="reflow_HeaterControl.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="reflow_oven_main.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="reflow_oven_main.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="TTOS.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="TTOS.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

@@ -88,7 +88,7 @@ void store_EEPROM(Profile *_prof, uint8_t which_parameter, uint8_t **eeprom_ptr,
     switch (select)
     {
         case _Name:
-        #warning("not currently available")
+        //#warning("not currently available")
         break;
         
         case _Time:

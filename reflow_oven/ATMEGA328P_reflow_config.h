@@ -16,6 +16,19 @@
 #ifndef ATMEGA328P_REFLOW_CONFIG_H
 #define ATMEGA328P_REFLOW_CONFIG_H
 
+#include "avr/io.h"
+/*------------------------------------------------------------------------*/
+/*-----------------------       MACROS         ---------------------------*/
+#ifndef __DDR_MACROS__
+#define DDR(x) (*(&x - 1))      /* address of data direction register of port x */
+#if defined(__AVR_ATmega64__) || defined(__AVR_ATmega128__)
+/* on ATmega64/128 PINF is on port 0x00 and not 0x60 */
+#define PIN(x) ( &PORTF==&(x) ? _SFR_IO8(0x00) : (*(&x - 2)) )
+#else
+#define PIN(x) (*(&x - 2))    /* address of input register of port x          */
+#endif
+
+#endif
 /*------------------------------------------------------------------------*/
 /*-----------------------   HARDWARE DEFINES   ---------------------------*/
 /*** PROCESSOR PACKAGE ***/
@@ -65,6 +78,7 @@
 /*------------------------------------------------------------------------*/
 #ifdef _ATMEGA328_DIP_
 
+/* LCD PINS */
 #define LCD_PORT         PORTD        /**< port for the LCD lines   */
 #define LCD_DATA0_PORT   LCD_PORT     /**< port for 4bit data bit 0 */
 #define LCD_DATA1_PORT   LCD_PORT     /**< port for 4bit data bit 1 */
@@ -83,10 +97,13 @@
 #define BACKLIGHT_PORT   PORTB
 #define LCD_BACKLIGHT    1
 
+/* !!! incomplete !!! */
+
 #endif
 
 #ifdef _ATMEGA328_32TQFP_
 
+/* LCD PINS */
 #define LCD_PORT         PORTD        /**< port for the LCD lines   */
 #define LCD_DATA0_PORT   PORTB        /**< port for 4bit data bit 0 */
 #define LCD_DATA1_PORT   LCD_PORT     /**< port for 4bit data bit 1 */
@@ -104,6 +121,12 @@
 #define LCD_E_PIN        4            /**< pin  for Enable line     */
 #define BACKLIGHT_PORT   PORTB
 #define LCD_BACKLIGHT    1
+
+/* HEATER/FAN PINS */
+#define HEATER_PORT     PORTC        /**< port for the relay control*/
+#define HEATER_PIN      4            /**< pin for the relay         */
+#define FAN_PORT        PORTC        /**< port for the fan          */
+#define FAN_PIN         3            /**< pin for the fan           */
 
 #endif
 /**************************************************************************/
