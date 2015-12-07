@@ -14,12 +14,12 @@
 void Heater_Init();
 
 /* Turn the heater on or off. */
-typedef enum { OFF = 0, ON } HeaterSetting;
+typedef enum { HEATER_OFF = 0, HEATER_ON } HeaterSetting;
 void HeaterSet(HeaterSetting status);
 
 void Fan_Init();
 
-typedef enum { OFF = 0, ON } FanSetting;
+typedef enum { FAN_OFF = 0, FAN_ON } FanSetting;
 void FanSet(FanSetting status);
 
 #endif /* REFLOW_HEATERCONTROL_H_ */
