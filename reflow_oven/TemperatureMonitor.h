@@ -9,8 +9,9 @@
 #ifndef TEMPERATUREMONITOR_H_
 #define TEMPERATUREMONITOR_H_
 
+#include "ATMEGA328P_reflow_config.h"
 #include "max31855.h"
-#include "reflow_oven_main.h"
+
 
 /**************************************************************************/
 /*      Typedefs                                                          */
@@ -43,24 +44,7 @@ double MeasureTemp_ReadAverage();
 /*------------------------------------------------------------------------*/
 void MeasureTemp_Initialize();
 
-void MeasureTemperature_ActiveState();
-
-
-/*------------------------------------------------------------------------*/
-/*      Private Functions                                                 */
-/*------------------------------------------------------------------------*/
-
-/**************************************************************************/
-/*      State Machines  (also private)                                    */
-/**************************************************************************/
-
-static void MeasureTempSM_Idle();
-
-static void MeasureTempSM_Record();
-
-static void MeasureTempSM_Average();
-
-static void MeasureTempSM_Standby();
+void MeasureTemp_ActiveState();
 
 
 /**************************************************************************/

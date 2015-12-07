@@ -13,7 +13,26 @@
 /*      MACROS                                                            */
 #define MAX_TEMP_SAMPLE     10
 
+/*------------------------------------------------------------------------*/
+/*      Private Functions                                                 */
+/*------------------------------------------------------------------------*/
 
+/**************************************************************************/
+/*      State Machines  (also private)                                    */
+/*      This is here and not in the header because static function
+ *      prototyptes in a header file included elsewhere causes a
+ *      whole mess of problems.  This allows the functions to work
+ *      as intended: locally in this file.
+ */
+/**************************************************************************/
+
+static void MeasureTempSM_Idle();
+
+static void MeasureTempSM_Record();
+
+static void MeasureTempSM_Average();
+
+static void MeasureTempSM_Standby();
 /**************************************************************************/
 /*      Global Variables that are !exteral!                               */
 extern volatile uint16_t   main_MASTER_CTRL_FLAG;
@@ -93,7 +112,7 @@ static void MeasureTempSM_Record()
     static uint8_t index = 0;
     double currentTemp = max31855_readCelsius();
     
-    if (index < MAX_TEMP_SAMPLE - 1)
+    if (index < MAX_TEMP_SAMPLE)
     {
         if (currentTemp != NAN)
         {
@@ -125,7 +144,7 @@ static void MeasureTempSM_Average()
     {
         main_MASTER_CTRL_FLAG |= TEMP_IS_VALID;
         
-        MeasureTemp_AveragedegC = sum / MAX_TEMP_SAMPLE;
+        MeasureTemp_AveragedegC = sum / (double)MAX_TEMP_SAMPLE;
         sum = 0;
         i = 0;
         MeasureTemp_pfnStateMachine = MeasureTempSM_Standby;
@@ -143,7 +162,7 @@ static void MeasureTempSM_Standby()
      *  ->  Look into when the temperature may not be valid, maybe
      *      adjust code accordingly.
      */
-    #warning "Potential bug - will the temperature ever not be valid after this?"
+    #warning "Potential bug - will the temperature ever *not* be valid after this?"
     if (main_MASTER_CTRL_FLAG & TEMP_REQUEST)
     {
         MeasureTemp_pfnStateMachine = MeasureTempSM_Record;
