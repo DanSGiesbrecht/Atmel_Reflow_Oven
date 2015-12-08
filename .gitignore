@@ -27,3 +27,10 @@ _ReSharper*/
 [Tt]est[Rr]esult*
 *.vssscc
 $tf*/
+*.atsuo
+*.cproj
+#~ <- vim temporary files
+*~
+*.swp
+*.swo
+
