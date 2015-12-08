@@ -130,6 +130,29 @@
 
 #endif
 /**************************************************************************/
+/*      SOFTWARE FLAGS                                                    */
+/**************************** Master Control Flags *************************/
+/* 16-bit variable for global settings.     */
+
+#define TEMP_REQUEST            0x0001      //  request the temp be taken.
+#define TEMP_IS_VALID           0x0002      //  validate temperature.
+#define HEATER_POWERED          0x0004      //  enable/disable heating.
+//                              0x0008
+//                              0x0010
+//                              0x0020
+//                              0x0040
+//                              0x0080
+//                              0x0100
+//                              0x0200
+//                              ......
+#define REFLOW_IN_PROGRESS      0x8000      //  enable/cancel a reflow proc.
+/***************************************************************************/
+
+
+
+
+
+
 
 /* ATMEGA328P_REFLOW_CONFIG_H */
 #endif

@@ -38,10 +38,14 @@
 
 
 /**************************************************************************/
-/*      GLOBAL VARIABLES                                                  */    
-extern volatile int encoderValue;
-extern volatile uint32_t millis;
+/*      GLOBAL VARIABLES                                                  */
 
+/***************************************/
+/*       MASTER CONTROL REGISTER       */
+volatile uint16_t    main_MASTER_CTRL_FLAG = 0;
+/************************************/
+
+extern volatile int encoderValue;
 /**************************************************************************/
 /* MACROS                                                                 */
 #ifndef __DDR_MACROS__
@@ -59,41 +63,63 @@ extern volatile uint32_t millis;
 /**************************************************************************/
 
 /**************************************************************************/
-
+/*------------------------------------------------------------------------*/
 
 /* FINAL MAIN */
 #ifdef FINAL_MAIN_
 int main()
 {
+/*------------------------------------------------------------------------*/
+/*      Initialize System Hardware.                                       */
+/*------------------------------------------------------------------------*/
     ATMEGA328_init();
     /* Allow peripherals to stabilize. */
     _delay_ms(200);
-    char *message = {"Unhook Heater!"};
-    //lcd_puts(message);
-    HeaterSet(ON);
-    _delay_ms(500);
+
+/*------------------------------------------------------------------------*/
+/*      Initialize State Machines.                                        */
+/*------------------------------------------------------------------------*/
+    MeasureTemp_Initialize();
+
+
+/*------------------------------------------------------------------------*/
+/*      Start the System Tick.                                            */
+/*------------------------------------------------------------------------*/
     AT328_SysTick_Start();
+    
+    double currentTemp = 0;
+    char tempstring[6];
+    lcd_clrscr();
     while(1)
     {
-        /* DO STUFF */
+        /* Run state Machines */
+        MeasureTemp_ActiveState();
         
+        /* Update LCD */
+        main_MASTER_CTRL_FLAG |= TEMP_REQUEST;
         
+        if (main_MASTER_CTRL_FLAG & TEMP_IS_VALID)
+        {
+            currentTemp = MeasureTemp_ReadAverage();
+            dtostrf(currentTemp, -5, 1, tempstring);
+            lcd_puts(tempstring);
+        }
         
         
         
         
         
         /********** GO TO SLEEP **************/
+        /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
         /* The fan pin and connected LED are being used as the heartbeat,
         because there is no fan connected yet, and there is no other unused onboard LED
         */
         // Turn off LED before sleeping.
-        FanSet(OFF);
-        
-        // sleep for 1ms.
+        FanSet(FAN_OFF);
+        // sleep for remainder of 1ms.
         Enter_Sleep_Mode(1);
         // Turn on LED after sleeping.
-        FanSet(ON);
+        FanSet(FAN_ON);
         /************************************/
         
     }// end while(1);
@@ -101,6 +127,7 @@ int main()
     return 0;
 }// end main();
 #endif
+
 /**************************************************************************/
 /**************************************************************************/
 /**************************************************************************/

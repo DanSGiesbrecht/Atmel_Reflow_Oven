@@ -7,12 +7,15 @@
  *  
  *	Important Notes:
  *		- Refer to <reflow_config.h> for hardware specifics.
- *		
+ *		- Details on overhead process flags can be found in <reflow_config.h>
  *
  *
  */ 
 /**************************************************************************/
 /**************************************************************************/
+#ifndef REFLOW_OVEN_MAIN_H_
+#define REFLOW_OVEN_MAIN_H_
+
 
 #include <util/delay.h>
 #include <stdlib.h>
@@ -24,11 +27,13 @@
 #include "quad_encoder.h"
 #include "ProfileFunctions.h"
 #include "reflow_EEPROM.h"
-#include "reflow_HeaterControl.h"
+#include "HeaterControl.h"
+#include "TemperatureMonitor.h"
 
 
 #define BACKLIGHT_ON    1
 #define BACKLIGHT_OFF   0
+
 
 /**************************** PROTOTYPES ***********************************/
 
@@ -40,7 +45,7 @@ void _LCD_backlight_init(uint8_t);
 /* Write a 1 to turn backlight on, 0 to turn backlight off. */
 void _LCD_backWrite(uint8_t LED_status);
 
-/* Initialise the ATMega328P chip. This calls all initialise functions. */
+/* Initialize the ATMega328P chip. This calls all initialize functions. */
 /* Enable interrupts.                                                   */
 void ATMEGA328_init(void);
 
@@ -63,3 +68,7 @@ void AT328_SysTick_Stop();
 ISR(TIMER2_COMPA_vect);
 
 /****************************** STRUCTS ************************************/
+
+
+
+#endif
