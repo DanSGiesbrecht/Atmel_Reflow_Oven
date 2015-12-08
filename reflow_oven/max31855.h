@@ -5,7 +5,10 @@
  *   Created: 7/26/2015 9:22:00 PM
  *    Author: dsgiesbrecht
  *   Version: v1.0 - driver is functional!
- *  
+ *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *          THE LICENSING INFORMATION FROM ORIGINAL ADAFRUIT CODE
+ *          WILL GO HERE
+ *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * Description:
  *      Driver for the Adafruit MAX31855K K-type thermocouple amplifier.
  *      Requires:
