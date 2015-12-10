@@ -25,7 +25,9 @@
 #ifndef     QUAD_ENCODER_H
 #define     QUAD_ENCODER_H
 
+#include "ATMEGA328P_reflow_config.h"
 #include <avr/interrupt.h>
+
 
 #define ENCODER_PORT    PORTC
 #define ENCODER_PINS    PINC
@@ -34,7 +36,30 @@
 #define ENCODER_PUSH    5
 
 /**************************************************************************/
-/*  Function:   Initialize the PCInterrupt pins for the specific MCU, 
+/*      TYPEDEFS                                                          */
+typedef void(*fnCode_type)(void);
+
+#ifdef  INVERT_ENCODER_DIRECTION
+/*
+typedef enum {ENCODER_LEFT = 0, ENCODER_RIGHT, ENCODER_BTN} Enc_WhichInput;
+#else
+typedef enum {ENCODER_RIGHT = 0, ENCODER_LEFT, ENCODER_BTN} Enc_WhichInput;
+*/
+#endif
+
+typedef enum {inactive = 0, ACTIVE} InputState;
+
+/**************************************************************************/
+/**************************************************************************/
+/*      Function Prototypes                                               */
+/**************************************************************************/
+
+/*------------------------------------------------------------------------*/
+/*      Public Functions                                                  */
+/*------------------------------------------------------------------------*/
+
+/*  encoder_pininit();
+*   Function:   Initialize the PCInterrupt pins for the specific MCU,
 *               record inital values.
 *   Requires:   -Proper assignment of pins, and review of the ISR.
 *               -Must be called before the global interrupts are
@@ -42,8 +67,24 @@
 *   Promises:   To set up the interrupts, and record initial values.
 */
 void encoder_pininit(void);
+
+uint8_t WasEncoderTurnedRIGHT();
+
+uint8_t WasEncoderTurnedLEFT();
+
+uint8_t WasEncoderPressed();
+
 /*------------------------------------------------------------------------*/
+/*      Protected Functions                                               */
 /*------------------------------------------------------------------------*/
+void EncoderDebounce_Initialize();
+
+/*      Run the current State.                                            */
+void EncoderDebounce_ActiveState();
+
+/**************************************************************************/
+/*------------------------------------------------------------------------*/
+/*      INTERRUPT SERVICE ROUTINE - PCINT 1                               */
 
 ISR (PCINT1_vect);
 
