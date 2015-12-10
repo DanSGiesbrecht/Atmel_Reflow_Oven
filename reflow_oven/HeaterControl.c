@@ -35,6 +35,8 @@ static fnCode_type HeaterControl_pfnStateMachine;
 static fnCode_type HeaterPWM_pfnStateMachine;
 
 static uint16_t HeaterOnTime = 0;
+static uint16_t HeaterOnTime_BUFFER = 0;
+#define HEATER_PERIOD   2000
 
 /**************************************************************************/
 /*      Static Function Prototypes                                        */
@@ -144,8 +146,8 @@ static void HeaterSet(HeaterSetting status)
  */
  static void HeaterPWM_SM_Idle()
  {
-     /* To leave this state, a reflow process must be running (flag set), and the Heater-
-      * powered flag must also be set.
+     /* To leave this state, a reflow process must be running (flag set), and
+      * the Heater-powered flag must also be set.
       */
      HeaterSet(HEATER_OFF);
      if ((main_MASTER_CTRL_FLAG & REFLOW_IN_PROGRESS)&&(main_MASTER_CTRL_FLAG & HEATER_POWERED))
@@ -156,25 +158,57 @@ static void HeaterSet(HeaterSetting status)
  
  static void HeaterPWM_SM_Standby()
  {
-     if (!(main_MASTER_CTRL_FLAG & REFLOW_IN_PROGRESS))
+     if ( ( main_MASTER_CTRL_FLAG & REFLOW_IN_PROGRESS & HEATER_POWERED)==(REFLOW_IN_PROGRESS & HEATER_POWERED)
+            && HeaterOnTime != 0)
+     {
+         HeaterPWM_pfnStateMachine = HeaterPWM_SM_HeaterON;
+         /*     A buffer is used because it is possible that HeaterOnTime might get changed midway through
+          *     a heating cycle.
+          */
+         HeaterOnTime_BUFFER = HeaterOnTime;
+     }         
+     else
+     {
+         HeaterPWM_pfnStateMachine = HeaterPWM_SM_Idle;
+     }
  }
  
  static void HeaterPWM_SM_HeaterON()
  {
-     
+     HeaterSet(HEATER_ON);
+     HeaterPWM_pfnStateMachine = HeaterPWM_SM_CountON;
  }
  
  static void HeaterPWM_SM_CountON()
  {
-     
+     static uint16_t Count = 0;
+     if (Count == HeaterOnTime_BUFFER)
+     {
+         HeaterPWM_pfnStateMachine = HeaterPWM_SM_HeaterOFF;
+         Count = 0;
+     }
+     else
+     {
+         Count++;
+     }
  }
  
  static void HeaterPWM_SM_HeaterOFF()
  {
-     
+     HeaterSet(HEATER_OFF);
  }
  
  static void HeaterPWM_SM_CountOFF()
  {
-     
+     uint16_t OffTime = (uint16_t)HEATER_PERIOD - HeaterOnTime_BUFFER;
+     static uint16_t Count = 0;
+     if (Count == OffTime)
+     {
+         HeaterPWM_pfnStateMachine = HeaterPWM_SM_Standby;
+         Count = 0;
+     }
+     else
+     {
+         Count++;
+     }
  }
