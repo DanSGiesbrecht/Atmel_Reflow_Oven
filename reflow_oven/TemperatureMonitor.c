@@ -47,7 +47,7 @@ extern volatile uint16_t   main_MASTER_CTRL_FLAG;
 /**************************************************************************/
 /*      State Machine Function Pointer                                    */
 static fnCode_type MeasureTemp_pfnStateMachine;
-
+/*------------------------------------------------------------------------*/
 static double MeasureTemp_AveragedegC;
 static double MeasureTemp_Array[MAX_TEMP_SAMPLE];
 /**************************************************************************/
@@ -63,10 +63,6 @@ double MeasureTemp_ReadAverage()
 {
     return MeasureTemp_AveragedegC;
 }
-
-
-
-
 
 /*------------------------------------------------------------------------*/
 /*      Protected Functions                                               */

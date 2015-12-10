@@ -80,7 +80,7 @@ int main()
 /*      Initialize State Machines.                                        */
 /*------------------------------------------------------------------------*/
     MeasureTemp_Initialize();
-
+    //EncoderDebounce_Initialize();
 
 /*------------------------------------------------------------------------*/
 /*      Start the System Tick.                                            */
@@ -94,20 +94,46 @@ int main()
     {
         /* Run state Machines */
         MeasureTemp_ActiveState();
+        //EncoderDebounce_ActiveState();
         
         /* Update LCD */
         main_MASTER_CTRL_FLAG |= TEMP_REQUEST;
         
         if (main_MASTER_CTRL_FLAG & TEMP_IS_VALID)
         {
+            lcd_gotoxy(0,0);
             currentTemp = MeasureTemp_ReadAverage();
             dtostrf(currentTemp, -5, 1, tempstring);
             lcd_puts(tempstring);
         }
         
-        
-        
-        
+        lcd_gotoxy(0,1);
+        if (WasEncoderPressed())
+        {
+            lcd_putc('P');
+        }
+        else
+        {
+            lcd_putc(' ');
+        }
+        lcd_gotoxy(1, 1);
+        if (WasEncoderTurnedLEFT())
+        {
+            lcd_putc('L');
+        }
+        else
+        {
+            lcd_putc(' ');
+        }
+        //lcd_gotoxy(0, 1);
+        if (WasEncoderTurnedRIGHT())
+        {
+            lcd_putc('R');
+        }
+        else
+        {
+            lcd_putc(' ');
+        }
         
         /********** GO TO SLEEP **************/
         /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/

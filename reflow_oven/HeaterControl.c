@@ -196,6 +196,7 @@ static void HeaterSet(HeaterSetting status)
  static void HeaterPWM_SM_HeaterOFF()
  {
      HeaterSet(HEATER_OFF);
+     HeaterPWM_pfnStateMachine = HeaterPWM_SM_CountOFF;
  }
  
  static void HeaterPWM_SM_CountOFF()
