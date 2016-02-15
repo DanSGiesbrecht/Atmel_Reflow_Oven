@@ -102,8 +102,8 @@ void encoder_pininit(void)
     
     /*  Enable PinChange Interrupt pins 14:8    */
     PCICR |= (1 << PCIE1);
-    /*  Enable PCINT8 (PC0); PCINT9 (PC1); PCINT10 (PC2).   */
-    PCMSK1 |= (1 << PCINT8) | (1 << PCINT9) | (1 << PCINT10);
+    /*  Enable PCINT8 (PC0); PCINT9 (PC1); PCINT10 (PC5).   */
+    PCMSK1 |= (1 << PCINT8) | (1 << PCINT9) | (1 << PCINT13);
     
     /*  Record historical values of PCINT   */
     _encoder_pinhistory = ENCODER_PINS;
