@@ -18,6 +18,8 @@
  *      @   This library uses external ISR's, and is
  *          designed specifically for the ATMega328P. Be sure that your
  *          hardware is compatible.
+ *      @   !!The state machine given here hasn't been used. The ISR and
+            check functions seem to be sufficient.
  */
 /**************************************************************************/
 /**************************************************************************/
@@ -156,6 +158,16 @@ uint8_t WasEncoderPressed()
         return 1;
     }
     return 0;
+}
+
+void EncoderTurnAck()
+{
+    encoderValue = 0;
+}
+
+void EncoderPushAck()
+{
+    Encoder_Button_Pushed = 0;
 }
 
 /*------------------------------------------------------------------------*/
