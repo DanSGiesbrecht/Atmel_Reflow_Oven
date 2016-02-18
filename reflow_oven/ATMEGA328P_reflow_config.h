@@ -46,8 +46,9 @@
 /* ------------------------ TIMER2 PRESCALER ---------------------------- */
 /* 1ms ticks    */
 #ifndef TIMER2_PRESCALE_BITSHIFT
-#define TIMER2_PRESCALE_BITSHIFT    (0x1 <<CS22)    // clk/64
-#endif
+//#define TIMER2_PRESCALE_BITSHIFT    (0x1 <<CS22)    // clk/64 for 1ms period
+#define TIMER2_PRESCALE_BITSHIFT      (0x1 <<CS22 | 0x1 <<CS20) // clk/128
+#endif                                  // for 2ms period.
 #ifndef TIMER2_CTC_BITSHIFT
 #define TIMER2_CTC_BITSHIFT         (0x1 << WGM21)  // CTC MODE
 #endif

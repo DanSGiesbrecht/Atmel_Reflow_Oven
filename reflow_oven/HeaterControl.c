@@ -36,7 +36,7 @@ static fnCode_type HeaterPWM_pfnStateMachine;
 
 static uint16_t HeaterOnTime = 0;
 static uint16_t HeaterOnTime_BUFFER = 0;
-#define HEATER_PERIOD   2000
+#define HEATER_PERIOD   1000    // 2sec (2ms period)
 
 /**************************************************************************/
 /*      Static Function Prototypes                                        */
@@ -89,6 +89,19 @@ void FanSet(FanSetting status)
     FAN_PORT = protectREG | (status << FAN_PIN);
 }
 
+/*      test function                                                     */
+void HeaterPercent(uint16_t percent)
+{
+    uint16_t temp_percent = 0;
+    if (percent > 90)
+        temp_percent = 100;
+    else if (percent < 10)
+        temp_percent = 0;
+    else
+        temp_percent = percent;
+        
+    HeaterOnTime = (temp_percent * HEATER_PERIOD)/100;
+}  
 /*------------------------------------------------------------------------*/
 /*      Protected Functions                                               */
 /*------------------------------------------------------------------------*/
