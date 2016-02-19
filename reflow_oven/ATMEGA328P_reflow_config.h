@@ -55,6 +55,10 @@
 #ifndef TOTAL_TICKS
 #define TOTAL_TICKS     250         // for 16MHz: 250. for 8MHz: 125.
 #endif
+
+/**************************************************************************/
+/*  Definition of a second                                                */
+#define TICKS_PER_SEC       500
 /**************************************************************************/
 /*--------------------------  WARNINGS  ----------------------------------*/
 #ifdef __3V3__
@@ -78,7 +82,7 @@
 #define TEMP_REQUEST            0x0001      //  request the temp be taken.
 #define TEMP_IS_VALID           0x0002      //  validate temperature.
 #define HEATER_POWERED          0x0004      //  enable/disable heating.
-//                              0x0008
+#define UPDATE_ENCODER          0x0008
 //                              0x0010
 //                              0x0020
 //                              0x0040

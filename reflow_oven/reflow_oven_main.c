@@ -34,6 +34,7 @@
 #define FINAL_MAIN_
 //#define MAIN_TEST_1_
 //#define MAIN_TEST_2_
+//#define MAIN_TEST_3_
 
 
 
@@ -80,60 +81,19 @@ int main()
 /*      Initialize State Machines.                                        */
 /*------------------------------------------------------------------------*/
     MeasureTemp_Initialize();
-    //EncoderDebounce_Initialize();
-
+    HeaterPWM_Initialize();
+    reflow_Initialize();
 /*------------------------------------------------------------------------*/
 /*      Start the System Tick.                                            */
 /*------------------------------------------------------------------------*/
     AT328_SysTick_Start();
     
-    double currentTemp = 0;
-    char tempstring[6];
-    lcd_clrscr();
     while(1)
     {
         /* Run state Machines */
         MeasureTemp_ActiveState();
-        //EncoderDebounce_ActiveState();
-        
-        /* Update LCD */
-        main_MASTER_CTRL_FLAG |= TEMP_REQUEST;
-        
-        if (main_MASTER_CTRL_FLAG & TEMP_IS_VALID)
-        {
-            lcd_gotoxy(0,0);
-            currentTemp = MeasureTemp_ReadAverage();
-            dtostrf(currentTemp, -5, 1, tempstring);
-            lcd_puts(tempstring);
-        }
-        
-        lcd_gotoxy(0,1);
-        if (WasEncoderPressed())
-        {
-            lcd_putc('P');
-        }
-        else
-        {
-            lcd_putc(' ');
-        }
-        lcd_gotoxy(1, 1);
-        if (WasEncoderTurnedLEFT())
-        {
-            lcd_putc('L');
-        }
-        else
-        {
-            lcd_putc(' ');
-        }
-        //lcd_gotoxy(0, 1);
-        if (WasEncoderTurnedRIGHT())
-        {
-            lcd_putc('R');
-        }
-        else
-        {
-            lcd_putc(' ');
-        }
+        HeaterPWM_ActiveState();
+        reflow_ActiveState();
         
         /********** GO TO SLEEP **************/
         /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
@@ -259,6 +219,117 @@ int main()
     return 0;
 }
 #endif
+
+#ifdef MAIN_TEST_3_
+int main()
+{
+/*------------------------------------------------------------------------*/
+/*      Initialize System Hardware.                                       */
+/*------------------------------------------------------------------------*/
+    ATMEGA328_init();
+    /* Allow peripherals to stabilize. */
+    _delay_ms(200);
+
+/*------------------------------------------------------------------------*/
+/*      Initialize State Machines.                                        */
+/*------------------------------------------------------------------------*/
+    MeasureTemp_Initialize();
+    //EncoderDebounce_Initialize();
+    HeaterPWM_Initialize();
+
+/*------------------------------------------------------------------------*/
+/*      Start the System Tick.                                            */
+/*------------------------------------------------------------------------*/
+    AT328_SysTick_Start();
+    
+    double currentTemp = 0;
+    char tempstring[6];
+    lcd_clrscr();
+    while(1)
+    {
+        /* Run state Machines */
+        MeasureTemp_ActiveState();
+        //EncoderDebounce_ActiveState();
+        HeaterPWM_ActiveState();
+        
+        /* Update LCD */
+        main_MASTER_CTRL_FLAG |= TEMP_REQUEST;
+        
+        if (main_MASTER_CTRL_FLAG & TEMP_IS_VALID)
+        {
+            lcd_gotoxy(0,0);
+            currentTemp = MeasureTemp_ReadAverage();
+            dtostrf(currentTemp, -5, 1, tempstring);
+            lcd_puts(tempstring);
+        }
+        
+        lcd_gotoxy(0,1);
+        if (WasEncoderPressed())
+        {
+            lcd_putc('P');
+            HeaterPercent(50); // test temperature at 50%. flags must also be set. (below).
+        }
+        else
+        {
+            lcd_putc(' ');
+        }
+        lcd_gotoxy(1, 1);
+        if (WasEncoderTurnedLEFT())
+        {
+            lcd_putc('L');
+        }
+        else
+        {
+            lcd_putc(' ');
+        }
+        //lcd_gotoxy(0, 1);
+        if (WasEncoderTurnedRIGHT())
+        {
+            lcd_putc('R');
+        }
+        else
+        {
+            lcd_putc(' ');
+        }
+        
+        /* TEST THE TEMPERATURE OPERATING AT 50%        */
+        main_MASTER_CTRL_FLAG |= (HEATER_POWERED | REFLOW_IN_PROGRESS);
+        
+        /* Test timing */
+        static uint16_t milSecTick = 0;
+        if (milSecTick == 500)
+        {
+            static char c = '0';
+            lcd_gotoxy(10,1);
+            lcd_putc(c);
+            c++;
+            if (c > '9')
+                c = '0';
+            milSecTick = 0;
+        }
+        milSecTick++;
+        
+        /********** GO TO SLEEP **************/
+        /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+        /* The fan pin and connected LED are being used as the heartbeat,
+        because there is no fan connected yet, and there is no other unused onboard LED
+        */
+        // Turn off LED before sleeping.
+        FanSet(FAN_OFF);
+        // sleep for remainder of 1ms.
+        Enter_Sleep_Mode(1);
+        // Turn on LED after sleeping.
+        FanSet(FAN_ON);
+        /************************************/
+        
+    }// end while(1);
+    
+    return 0;
+}// end main();
+#endif
+
+
+
 
 /**************************************************************************/
 /**************************************************************************/

@@ -99,6 +99,7 @@ static void MeasureTempSM_Idle()
     if (main_MASTER_CTRL_FLAG & TEMP_REQUEST)
     {
         /* Change state to measure/record. */
+        main_MASTER_CTRL_FLAG &= (~TEMP_IS_VALID);
         MeasureTemp_pfnStateMachine = MeasureTempSM_Record;
     }
 }

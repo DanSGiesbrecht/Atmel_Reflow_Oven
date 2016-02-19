@@ -29,6 +29,7 @@
 #include "reflow_EEPROM.h"
 #include "HeaterControl.h"
 #include "TemperatureMonitor.h"
+#include "reflow_app.h"
 
 
 #define BACKLIGHT_ON    1
