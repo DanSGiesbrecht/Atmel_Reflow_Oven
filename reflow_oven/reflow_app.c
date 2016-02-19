@@ -29,6 +29,10 @@
 static void reflowSM_Boot();
 
 static void reflowSM_Main();
+
+static void reflowSM_Profiles();
+
+static void reflowSM_Info();
 /**************************************************************************/
 /*      State Machines  (also private)                                    */
 /*      This is here and not in the header because static function
@@ -55,8 +59,21 @@ extern volatile uint16_t   main_MASTER_CTRL_FLAG;
 /**************************************************************************/
 /*      State Machine Function Pointer                                    */
 static fnCode_type reflow_pfnStateMachine;
-/*------------------------------------------------------------------------*/
 
+/*------------------------------------------------------------------------*/
+static uint8_t updateWholeDisplay;
+
+/* Profile STRINGS */
+const char string_leaded[]  PROGMEM = {"Leaded  "};     // extra spaces allow for
+const char string_pbFree[]  PROGMEM = {"Pb-Free "};     // not needing to clear any
+const char string_custom[]  PROGMEM = {"Custom  "};     // characters for reprint.
+
+PGM_P const profile_table[] PROGMEM =
+{
+    string_leaded,
+    string_pbFree,
+    string_custom
+};
 
 /**************************************************************************/
 /**************************************************************************/
@@ -98,6 +115,10 @@ static void printString(uint8t location_x, uint8_t location_y, char* stringToPri
 
 static void printCursor(Cursor* passedCursor)
 {
+    lcd_gotoxy(passedCursor->x_position,0);
+    lcd_putc(' ');
+    lcd_gotoxy(passedCursor->x_position,1);
+    lcd_putc(' ');
     lcd_gotoxy(passedCursor->x_position,passedCursor->row);
     lcd_putc(passedCursor->icon);
 }
@@ -113,7 +134,7 @@ static void reflowSM_Boot()
     {
         /* Print the boot screen */
         lcd_clrscr();
-        lcd_gotoxy(0,2);
+        lcd_gotoxy(2,0);
         lcd_puts("SOLDER REFLOW");
         lcd_gotoxy(1,1);
         lcd_puts("Firmware v 1.0");
@@ -122,6 +143,7 @@ static void reflowSM_Boot()
     {
         /* When 4 seconds has passed, change states. */
         reflow_pfnStateMachine = reflowSM_Main;
+        updateWholeDisplay = 1;
         count = 0;
         return; // avoids count incrementing.
     }
@@ -130,47 +152,78 @@ static void reflowSM_Boot()
 
 static void reflowSM_Main()
 {
-    uint8_t updateDisplay = 1;
     static Cursor cursor = {.icon = '<', .x_position = 8, .row = 0};
-    if (updateDisplay)
+    if (updateWholeDisplay)
     {
         lcd_clrscr();
         lcd_gotoxy(0,0);
         
-        /* maybe shorten this by making a function? */
-        lcd_puts_p(string_profiles);
+        // maybe shorten this by making a function?
+        //lcd_puts_p(string_profiles);
+        lcd_puts_P("Profiles");
         lcd_gotoxy(0,1);
-        lcd_puts_p(string_info);
+        //lcd_puts_p(string_info);
+        lcd_puts_P("Info");
         lcd_gotoxy(12,0);
-        lcd_puts_p(string_mainSide);
-        
+        //lcd_puts_p(string_mainSide);
+        lcd_puts_P("MAIN");
+       
         printCursor(&cursor);
-        updateDisplay = 0;
+        updateWholeDisplay = 0;
     }
     
     if (main_MASTER_CTRL_FLAG & UPDATE_ENCODER)
-    {
-        updateDisplay = 1;
+    {   /* Clear the UPDATE_ENCODER flag    */
+        main_MASTER_CTRL_FLAG &= (~UPDATE_ENCODER);
+        //updateWholeDisplay = 1;   // Not required: no scrolling. We just need to change the cursor.
         
-        if (WasEncoderTurnedLEFT() && cursor.row > 0)
+        if (WasEncoderTurnedRIGHT() && cursor.row == 1)
         {
             cursor.row--;
             EncoderTurnAck();
         }
-        else if (WasEncoderTurnedRIGHT() && cursor.row < MAIN_ELEMENTS)
+        else if (WasEncoderTurnedLEFT() && cursor.row == 0)
         {
             cursor.row++;
             EncoderTurnAck();
         }
-        else
+        else if (WasEncoderPressed())
         {
-            //reflow_pfnStateMachine = /* next state*/;
+            fnCode_type nextState;
+            if (cursor.row == PROFILES)
+                nextState = reflowSM_Profiles;
+            else if (cursor.row == INFO)
+                nextState = reflowSM_Info;
+            
+            reflow_pfnStateMachine =  nextState;
+            updateWholeDisplay = 1;
             EncoderPushAck();
         }
+        else
+            EncoderTurnAck();   /* The encoder was turned, but past the limits of the display */
+                                /* The flag gets cleared, but no action is taken.             */
+        printCursor(&cursor);
     }
-    
 }
 
+static void reflowSM_Profiles()
+{
+    static Cursor cursor = {.icon = '<', .x_position = 8, .row = 0};
+    
+    if (updateWholeDisplay)
+    {
+        updateWholeDisplay = 0;
+        lcd_clrscr();
+        lcd_gotoxy(9,0);
+        lcd_puts_P("PROFILE");
+        
+    }
+}
+
+static void reflowSM_Info()
+{
+    
+}
 
 
 

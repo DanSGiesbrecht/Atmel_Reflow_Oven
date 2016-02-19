@@ -13,29 +13,55 @@
  *
  * Important Notes: Refer to the ATMEGA328P_reflow_config.h file for
                     hardware specifics.
+                    
+                    
+ *      MENU STRUCTURE:
+ 
+ 
+                            BOOT SCREEN
+                                 |
+                     _______ MAIN MENU _____________     
+                    |                               |
+       _________ Profiles __                       Info
+      |         |           |
+    LEADED    Pb-FREE    CUSTOM             
+                    
+                    
+                    
+                    
+                    
+                    
+                    
  */
 /**************************************************************************/
 /**************************************************************************/
+
+#ifndef REFLOW_APP_H
+#define REFLOW_APP_H
 
 #include <avr/pgmspace.h>
 //#include "ATMEGA328P_reflow_config.h"
 #include <avr/io.h>
 
 
-#define MAIN_ELEMENTS   2
+#define MAIN_ELEMENTS       2
+#define PROFILE_ELEMENTS    3
 
 /**************************************************************************/
 /*      TYPEDEFS                                                          */
 typedef void(*fnCode_type)(void);
 
-/* Profile menu items */
+/* Main items    */
+typedef enum {PROFILES = 0, INFO} mainItems;
+
+/* Profile items */
 typedef enum {BACK_MAIN = 0, LEADED, PB_FREE, CUSTOM} profileItems;
     
 /* MAIN MENU STRINGS */
-const char string_profiles[]  PROGMEM = "Profiles";
-const char string_info[]      PROGMEM = "Info";
+//const char string_profiles[]  PROGMEM = "Profiles";
+//const char string_info[]      PROGMEM = "Info";
 
-const char string_mainSide[]  PROGMEM = "MAIN";
+//const char string_mainSide[]  PROGMEM = "MAIN";
 
 /**************************************************************************/
 /*      STRUCTS                                                           */
@@ -66,6 +92,8 @@ void reflow_Initialize();
 
 void reflow_ActiveState();
 
+
+#endif
 /**************************************************************************/
 /*                         END OF FILE                                    */
 /**************************************************************************/    

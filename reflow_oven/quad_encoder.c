@@ -245,7 +245,6 @@ static void EncoderDebounceSM_CheckValid()
 /*      INTERRUPT SERVICE ROUTINE - PCINT 1                               */
 ISR (PCINT1_vect)
 {
-    main_MASTER_CTRL_FLAG |= UPDATE_ENCODER;
     uint8_t changedbits;
     
     changedbits = ENCODER_PINS ^ _encoder_pinhistory;
@@ -308,6 +307,9 @@ ISR (PCINT1_vect)
             Encoder_Button_Pushed = 1;
         }
     }
+    
+    if (encoderValue > 4 || encoderValue < -4 || Encoder_Button_Pushed)
+        main_MASTER_CTRL_FLAG |= UPDATE_ENCODER;
     
 }
 
