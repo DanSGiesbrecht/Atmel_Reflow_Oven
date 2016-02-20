@@ -155,7 +155,7 @@ uint8_t WasEncoderPressed()
 {
     if (Encoder_Button_Pushed)
     {
-        Encoder_Button_Pushed = 0;
+        //Encoder_Button_Pushed = 0;
         return 1;
     }
     return 0;

@@ -45,7 +45,7 @@
 
 
 #define MAIN_ELEMENTS       2
-#define PROFILE_ELEMENTS    3
+#define PROFILE_ELEMENTS    4
 
 /**************************************************************************/
 /*      TYPEDEFS                                                          */
@@ -57,11 +57,8 @@ typedef enum {PROFILES = 0, INFO} mainItems;
 /* Profile items */
 typedef enum {BACK_MAIN = 0, LEADED, PB_FREE, CUSTOM} profileItems;
     
-/* MAIN MENU STRINGS */
-//const char string_profiles[]  PROGMEM = "Profiles";
-//const char string_info[]      PROGMEM = "Info";
-
-//const char string_mainSide[]  PROGMEM = "MAIN";
+/* Profile switch-case internal */
+typedef enum {WAIT_FOR_RELEASE = 0, WAIT_FOR_ENCODER, CHANGE_MENU} profileSwitch;
 
 /**************************************************************************/
 /*      STRUCTS                                                           */
@@ -73,7 +70,10 @@ typedef struct Cursor
     uint8_t row;
     } Cursor;
     
+//typedef struct Line
+//{
     
+//    };    
 /**************************************************************************/
 /**************************************************************************/
 /*      Function Prototypes                                               */
