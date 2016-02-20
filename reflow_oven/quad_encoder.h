@@ -74,6 +74,8 @@ uint8_t WasEncoderTurnedLEFT();
 
 uint8_t WasEncoderPressed();
 
+uint8_t IsEncoderReleased();
+
 /* Acknowledge that the encoder has changed value, reset flags.           */
 void EncoderTurnAck();
 

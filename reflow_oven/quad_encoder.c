@@ -155,10 +155,22 @@ uint8_t WasEncoderPressed()
 {
     if (Encoder_Button_Pushed)
     {
+        Encoder_Button_Pushed = 0;
         return 1;
     }
     return 0;
 }
+
+uint8_t IsEncoderReleased()
+{
+    if (ENCODER_PINS & (1 << ENCODER_PUSH))
+    {
+        /* The encoder has been released */
+        return 1;
+    }
+    return 0;
+}
+/*------------------------------------------------------------------------*/
 
 void EncoderTurnAck()
 {
