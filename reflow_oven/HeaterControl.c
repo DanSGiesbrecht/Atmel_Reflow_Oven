@@ -34,8 +34,8 @@ extern volatile uint16_t   main_MASTER_CTRL_FLAG;
 static fnCode_type HeaterControl_pfnStateMachine;
 static fnCode_type HeaterPWM_pfnStateMachine;
 
-static uint16_t HeaterOnTime = 0;
-static uint16_t HeaterOnTime_BUFFER = 0;
+static double HeaterOnTime = 0;
+static double HeaterOnTime_BUFFER = 0;
 #define HEATER_PERIOD   1000    // 2sec (2ms period)
 
 /**************************************************************************/
@@ -90,17 +90,18 @@ void FanSet(FanSetting status)
 }
 
 /*      test function                                                     */
-void HeaterPercent(uint16_t percent)
+void HeaterPercent(double percent)
 {
-    uint16_t temp_percent = 0;
+    double temp_percent = 0;
     if (percent > 90)
-        temp_percent = 100;
+        HeaterOnTime = HEATER_PERIOD;
     else if (percent < 10)
-        temp_percent = 0;
+        HeaterOnTime = 0;
     else
+    {
         temp_percent = percent;
-        
-    HeaterOnTime = (temp_percent * HEATER_PERIOD)/100;
+        HeaterOnTime = (temp_percent * HEATER_PERIOD)/100;
+    }        
 }  
 /*------------------------------------------------------------------------*/
 /*      Protected Functions                                               */

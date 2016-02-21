@@ -46,7 +46,9 @@
 volatile uint16_t    main_MASTER_CTRL_FLAG = 0;
 /************************************/
 
-extern volatile int encoderValue;
+extern volatile int         encoderValue;
+extern volatile uint32_t    reflow_systemSeconds;
+extern volatile uint32_t reflow_startTime;
 /**************************************************************************/
 /* MACROS                                                                 */
 #ifndef __DDR_MACROS__
@@ -94,6 +96,21 @@ int main()
         MeasureTemp_ActiveState();
         HeaterPWM_ActiveState();
         reflow_ActiveState();
+        
+        static uint16_t counter = 0;
+        if ((main_MASTER_CTRL_FLAG & REFLOW_IN_PROGRESS) && counter > 499)
+        {
+            counter = 0;
+            char tempString[6];
+            lcd_gotoxy(0,0);
+            lcd_puts_P("deg:");
+            dtostrf(MeasureTemp_ReadAverage(),-5,1,tempString);
+            lcd_puts(tempString);
+            lcd_puts_P("sec:");
+            dtostrf((double)(reflow_systemSeconds - reflow_startTime),-4,1,tempString);
+            lcd_puts(tempString);
+        }
+        counter++;
         
         /********** GO TO SLEEP **************/
         /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
@@ -258,7 +275,7 @@ int main()
         if (main_MASTER_CTRL_FLAG & TEMP_IS_VALID)
         {
             lcd_gotoxy(0,0);
-            currentTemp = MeasureTemp_ReadAverage();
+            currentTemp = MeasureTemp_ReadAverage();    // displaying temp could be wrapped.
             dtostrf(currentTemp, -5, 1, tempstring);
             lcd_puts(tempstring);
         }
@@ -369,10 +386,6 @@ void ATMEGA328_init()
     AT328_SysTick_Init();
     
     Sleep_Mode_init();
-    
-    /* Interrupts   */
-    // Or do this inside the specific source files?
-    
     sei();
 }
 

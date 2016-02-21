@@ -26,7 +26,7 @@ typedef enum { FAN_OFF = 0, FAN_ON } FanSetting;
 void FanSet(FanSetting status);
 
 /* Duty cycle of the heater. Must be 10 < percentage < 90; or =0,100      */
-void HeaterPercent(uint16_t percent);
+void HeaterPercent(double percent);
 /*------------------------------------------------------------------------*/
 /*      Protected Functions                                               */
 /*------------------------------------------------------------------------*/
