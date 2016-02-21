@@ -15,10 +15,13 @@
  */
 /**************************************************************************/
 /**************************************************************************/
+#include <stdlib.h>
 #include "reflow_app.h"
 #include "ATMEGA328P_reflow_config.h"
 #include "lcd.h"
 #include "quad_encoder.h"
+#include "HeaterControl.h"
+#include "TemperatureMonitor.h"
 
 
 /**************************************************************************/
@@ -31,9 +34,11 @@ static void reflowSM_Boot();
 
 static void reflowSM_Main();
 /*------------------------------------------------------------------------*/
-static void reflowSM_Profiles();
+static void reflowSM_ProfileSelect();
 
-static void reflowSM_Info();
+static void reflowSM_About();
+
+static void reflowSM_Calibrate();
 /*------------------------------------------------------------------------*/
 static void reflowSM_ProfBack();
 
@@ -42,6 +47,21 @@ static void reflowSM_Leaded();
 static void reflowSM_PbFree();
 
 static void reflowSM_Custom();
+/*------------------------------------------------------------------------*/
+static void reflowSM_PbBack();
+
+static void reflowSM_Start();
+
+static void reflowSM_PbInfo();
+
+static void reflowSM_PbSetTemp();
+
+static void reflowSM_PbSetTime();
+
+/*------------------------------------------------------------------------*/
+
+static void reflowSM_Begin();
+
 /**************************************************************************/
 /*      State Machines  (also private)                                    */
 /*      This is here and not in the header because static function
@@ -57,8 +77,7 @@ static void reflowSM_Custom();
 /**************************************************************************/
 /*      Global Variables that are !exteral!                               */
 
-extern volatile uint16_t   main_MASTER_CTRL_FLAG; 
-
+extern volatile uint16_t    main_MASTER_CTRL_FLAG;
 
 /**************************************************************************/
 /*      Global Variable definitions with scope limited to this local
@@ -70,20 +89,60 @@ extern volatile uint16_t   main_MASTER_CTRL_FLAG;
 static fnCode_type reflow_pfnStateMachine;
 
 /*------------------------------------------------------------------------*/
+volatile uint32_t    reflow_systemSeconds;
+volatile uint32_t reflow_startTime;
+
+
 static uint8_t updateWholeDisplay;
 
+static Cursor cursor = {.icon = '<', .x_position = 8, .row = 0};
+
+/*!!!!!!!!!!!!!!!!!!!!!!!!*/
 /* PROGRAM MEMORY STRINGS */
+/*!!!!!!!!!!!!!!!!!!!!!!!!*/
+
+// -- multi-use
 const char string_back[]    PROGMEM = {"BACK    "};
-    
+const char string_yes[]     PROGMEM = {"Yes!    "};
+const char string_no[]      PROGMEM = {"Nope.   "};
+
+// -- for main menu.
+const char string_profiles[]    PROGMEM = {"Profiles"};
+const char string_calibrate[]   PROGMEM = {"Calibrte"};
+const char string_about[]       PROGMEM = {"About   "};
+
+// -- for profile selection.    
 const char string_leaded[]  PROGMEM = {"Leaded  "};     // extra spaces allow for
 const char string_pbFree[]  PROGMEM = {"Pb-Free "};     // not needing to clear any
 const char string_custom[]  PROGMEM = {"Custom  "};     // characters for reprint.
 
-/*------------------------------------------------------------------------*/
-/* PROFILE MENU     */
+// -- for profile choice
+const char string_start[]   PROGMEM = {"Start   "};
+const char string_info[]    PROGMEM = {"Info    "};
+const char string_setTemp[] PROGMEM = {"Set Temp"};
+const char string_setTime[] PROGMEM = {"Set Time"};
 
-/* Profile STRINGS  */
-PGM_P const profile_table[] PROGMEM =
+const char string_ready[]   PROGMEM = {"Ready?  "};
+/*------------------------------------------------------------------------*/
+/*  MAIN MENU                   */
+PGM_P const main_table[] PROGMEM =
+{
+    string_profiles,
+    string_calibrate,
+    string_about
+};
+
+fnCode_type reflowMain_Array[] =
+{
+    reflowSM_ProfileSelect,
+    reflowSM_Calibrate,
+    reflowSM_About
+};
+/*------------------------------------------------------------------------*/
+/* PROFILES SELECTION MENU     */
+
+/* ProfileSelect STRINGS  */
+PGM_P const profileSelect_table[] PROGMEM =
 {
     string_back,
     string_leaded,
@@ -91,20 +150,56 @@ PGM_P const profile_table[] PROGMEM =
     string_custom
 };
 
-
-fnCode_type reflow_Profile_Array[] =
+fnCode_type reflowProfiles_Array[] =
 {   
     reflowSM_ProfBack,
-
     reflowSM_Leaded,
-
     reflowSM_PbFree,
-
     reflowSM_Custom
 };
 /*------------------------------------------------------------------------*/
-/*
+/*  PROFILE CHOSEN MENU        */
+PGM_P const profileChoice_table[] PROGMEM =
+{
+    string_back,
+    string_start,
+    string_info,
+    string_setTemp,
+    string_setTime
+};
 
+/* Pb-Free MENU                 */
+fnCode_type reflowPbFree_Array[] =
+{
+    reflowSM_PbBack,
+    reflowSM_Start,
+    reflowSM_PbInfo,
+    reflowSM_PbSetTemp,
+    reflowSM_PbSetTime
+};
+/*------------------------------------------------------------------------*/
+/*  START MENU              */
+PGM_P const startMenu_table[] PROGMEM =
+{
+    string_yes,
+    string_no
+};
+
+fnCode_type start_Array[] =
+{
+    reflowSM_Begin,
+    reflowSM_PbFree
+};
+
+/*------------------------------------------------------------------------*/
+/*  CALIBRATION MENU    */
+//  string table is the same as the startMenu_table[]!
+
+fnCode_type calibrate_Array[] =
+{
+    reflowSM_Calibrate, // stay in the same function pointer state machine.
+    reflowSM_Main
+};
 
 /*------------------------------------------------------------------------*/
 /**************************************************************************/
@@ -116,6 +211,16 @@ fnCode_type reflow_Profile_Array[] =
 /*      Public Functions                                                  */
 /*------------------------------------------------------------------------*/
 
+void countSeconds(uint32_t *seconds)
+{
+    static uint16_t twoMillisCounter = 0;
+    if (twoMillisCounter == 499)
+    {
+        (*seconds)++;
+        twoMillisCounter = 0;
+    }
+    twoMillisCounter++;
+}
 
 
 
@@ -129,6 +234,7 @@ void reflow_Initialize()
 
 void reflow_ActiveState()
 {
+    countSeconds(&reflow_systemSeconds);
     reflow_pfnStateMachine();
 }
 
@@ -197,117 +303,10 @@ static void reflowSM_Boot()
 /*------------------------------------------------------------------------*/
 static void reflowSM_Main()
 {
-    static Cursor cursor = {.icon = '<', .x_position = 8, .row = 0};
-    if (updateWholeDisplay)
-    {
-        lcd_clrscr();
-        lcd_gotoxy(0,0);
-        
-        // maybe shorten this by making a function?
-        //lcd_puts_p(string_profiles);
-        lcd_puts_P("Profiles");
-        lcd_gotoxy(0,1);
-        //lcd_puts_p(string_info);
-        lcd_puts_P("Info");
-        lcd_gotoxy(12,0);
-        //lcd_puts_p(string_mainSide);
-        lcd_puts_P("MAIN");
-       
-        printCursor(&cursor);
-        updateWholeDisplay = 0;
-    }
-    
-    if (main_MASTER_CTRL_FLAG & UPDATE_ENCODER)
-    {   /* Clear the UPDATE_ENCODER flag    */
-        main_MASTER_CTRL_FLAG &= (~UPDATE_ENCODER);
-        //updateWholeDisplay = 1;   // Not required: no scrolling. We just need to change the cursor.
-        
-        if (WasEncoderTurnedRIGHT() && cursor.row == 1)
-        {
-            cursor.row = 0;
-            EncoderTurnAck();
-        }
-        else if (WasEncoderTurnedLEFT() && cursor.row == 0)
-        {
-            cursor.row = 1;
-            EncoderTurnAck();
-        }
-        else if (WasEncoderPressed())
-        {
-            fnCode_type nextState;
-            if (cursor.row == PROFILES)
-                nextState = reflowSM_Profiles;
-            else if (cursor.row == INFO)
-                nextState = reflowSM_Info;
-            
-            reflow_pfnStateMachine = nextState;
-            updateWholeDisplay = 1;
-            EncoderPushAck();
-        }
-        
-        EncoderTurnAck();      /* The encoder was turned, but past the limits of the display */
-        printCursor(&cursor);  /* The flag gets cleared, but no action is taken.             */
-    }
-}
-/*------------------------------------------------------------------------*/
-static void reflowSM_Profiles()
-{
-    static Cursor cursor = {.icon = '<', .x_position = 8, .row = 0};
     static uint8_t index = 0;
-    
-    #if 0
-    if (!(IsEncoderReleased()))     // wait for the encoder to be released
-    {
-        break;
-    }
-    
-    if (updateWholeDisplay)
-    {
-        updateWholeDisplay = 0;
-        lcd_clrscr();
-        printLines(index, profile_table);
-        printCursor(&cursor);
-        
-        lcd_gotoxy(9,0);
-        lcd_puts_P("PROFILE");
-    }
-    
-    if (main_MASTER_CTRL_FLAG & UPDATE_ENCODER)
-    {   /* Clear the UPDATE_ENCODER flag    */
-        main_MASTER_CTRL_FLAG &= (~UPDATE_ENCODER);
-    
-        if (WasEncoderTurnedRIGHT())
-        {
-            if (cursor.row == 1)
-                cursor.row = 0;
-            else if (index > 0)
-            {
-                index--;
-                printLines(index, profile_table);
-            }
-        
-        }
-        else if (WasEncoderTurnedLEFT())
-        {
-            if (cursor.row == 0)
-                cursor.row = 1;
-            else if (index < PROFILE_ELEMENTS - 2)
-            {
-               index++;
-               printLines(index, profile_table);
-            }
-        }
-        else if (WasEncoderPressed())
-        {
-            
-        }
-    EncoderTurnAck();
-    printCursor(&cursor);
-    }   // old if-else style 'state-machine'
-    #endif // updated switch-case state machine listed below.
-    
-    static profileSwitch currentState = WAIT_FOR_RELEASE;
-    profileSwitch nextState = currentState;
+
+    static menuSwitch currentState = WAIT_FOR_RELEASE;
+    menuSwitch nextState = currentState;
     
     switch (currentState)
     {
@@ -315,7 +314,84 @@ static void reflowSM_Profiles()
         if (IsEncoderReleased())
         {
             lcd_clrscr();
-            printLines(index, profile_table);
+            printLines(index, main_table);
+            cursor.row = 0;
+            printCursor(&cursor);
+            
+            lcd_gotoxy(12,0);
+            lcd_puts_P("MAIN");
+            
+            nextState = WAIT_FOR_ENCODER;
+        }
+        break;
+        /*------------------------------------------------------------------------*/
+        case WAIT_FOR_ENCODER:
+        if (main_MASTER_CTRL_FLAG & UPDATE_ENCODER)
+        {   /* Clear the UPDATE_ENCODER flag    */
+            main_MASTER_CTRL_FLAG &= (~UPDATE_ENCODER);
+            
+            if (WasEncoderTurnedRIGHT())
+            {
+                if (cursor.row == 1)
+                cursor.row = 0;
+                else if (index > 0)
+                {
+                    index--;
+                    printLines(index, main_table);
+                }
+                
+            }
+            else if (WasEncoderTurnedLEFT())
+            {
+                if (cursor.row == 0)
+                cursor.row = 1;
+                else if (index < MAIN_ELEMENTS - 2)
+                {
+                    index++;
+                    printLines(index, main_table);
+                }
+            }
+            else if (WasEncoderPressed())
+            {
+                EncoderPushAck();
+                nextState = CHANGE_MENU;
+            }
+            EncoderTurnAck();
+            printCursor(&cursor);
+        }
+        break;
+        /*------------------------------------------------------------------------*/
+        case CHANGE_MENU:   // when leaving this state to go to outer next statemachine,
+        // currentState needs to get put back to WAIT_FOR_RELEASE!
+        reflow_pfnStateMachine = reflowMain_Array[index + cursor.row];
+        nextState = WAIT_FOR_RELEASE;
+        /* reset variables */
+        index = 0;
+        cursor.row = 0;
+        break;
+    }
+    currentState = nextState;
+   
+}
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+/*  Under Main  */
+static void reflowSM_ProfileSelect()
+{
+    static uint8_t index = 0;
+
+    static menuSwitch currentState = WAIT_FOR_RELEASE;
+    menuSwitch nextState = currentState;
+    
+    switch (currentState)
+    {
+        case WAIT_FOR_RELEASE:
+        if (IsEncoderReleased())
+        {
+            lcd_clrscr();
+            printLines(index, profileSelect_table);
+            cursor.row = 0;
             printCursor(&cursor);
             
             lcd_gotoxy(9,0);
@@ -337,7 +413,7 @@ static void reflowSM_Profiles()
                 else if (index > 0)
                 {
                     index--;
-                    printLines(index, profile_table);
+                    printLines(index, profileSelect_table);
                 }
                 
             }
@@ -345,10 +421,10 @@ static void reflowSM_Profiles()
             {
                 if (cursor.row == 0)
                 cursor.row = 1;
-                else if (index < PROFILE_ELEMENTS - 2)
+                else if (index < LISTED_PROFILE_ELEMENTS - 2)
                 {
                     index++;
-                    printLines(index, profile_table);
+                    printLines(index, profileSelect_table);
                 }
             }
             else if (WasEncoderPressed())
@@ -363,7 +439,7 @@ static void reflowSM_Profiles()
 /*------------------------------------------------------------------------*/
         case CHANGE_MENU:   // when leaving this state to go to outer next statemachine,
                             // currentState needs to get put back to WAIT_FOR_RELEASE!
-        reflow_pfnStateMachine = reflow_Profile_Array[index + cursor.row];
+        reflow_pfnStateMachine = reflowProfiles_Array[index + cursor.row];
         nextState = WAIT_FOR_RELEASE;
         /* reset variables */
         index = 0;
@@ -371,44 +447,374 @@ static void reflowSM_Profiles()
         break;
     }
     currentState = nextState;
-    
-            
 }
+
 /*------------------------------------------------------------------------*/
-static void reflowSM_Info()
+/*------------------------------------------------------------------------*/
+/*  Under Main  */
+static void reflowSM_About()
 {
-    //char buffer[16];
     
 }
 
 /*------------------------------------------------------------------------*/
 /*------------------------------------------------------------------------*/
+/*  Under Main  */
+static void reflowSM_Calibrate()
+{
+    static double startTemp = 0;
+    static double stopTemp = 0;
+    char tempString[6];
+    double degPerSecond;
+    
+    static double  totalTime  = 0;
+    
+    static uint8_t index = 0;
+
+    static calibrateSwitch currentState = WAIT_FOR_RELEASE_CALI;
+    calibrateSwitch nextState = currentState;
+    
+    switch (currentState)
+    {
+        case WAIT_FOR_RELEASE_CALI:
+        if (IsEncoderReleased())
+        {
+            lcd_clrscr();
+            printLines(index, startMenu_table);
+            cursor.row = 0;
+            printCursor(&cursor);
+            
+            lcd_gotoxy(10,0);
+            lcd_puts_P("Ready?");
+            
+            nextState = WAIT_FOR_ENCODER_CALI;
+        }
+        break;
+        /*------------------------------------------------------------------------*/
+        case WAIT_FOR_ENCODER_CALI:
+        if (main_MASTER_CTRL_FLAG & UPDATE_ENCODER)
+        {   /* Clear the UPDATE_ENCODER flag    */
+            main_MASTER_CTRL_FLAG &= (~UPDATE_ENCODER);
+            
+            if (WasEncoderTurnedRIGHT())
+            {
+                if (cursor.row == 1)
+                cursor.row = 0;
+                else if (index > 0)
+                {
+                    index--;
+                    printLines(index, startMenu_table);
+                }
+                
+            }
+            else if (WasEncoderTurnedLEFT())
+            {
+                if (cursor.row == 0)
+                cursor.row = 1;
+                else if (index < START_ELEMENTS - 2)
+                {
+                    index++;
+                    printLines(index, startMenu_table);
+                }
+            }
+            else if (WasEncoderPressed())
+            {
+                EncoderPushAck();
+                nextState = CHANGE_MENU_CALI;
+            }
+            EncoderTurnAck();
+            printCursor(&cursor);
+        }
+        break;
+        /*------------------------------------------------------------------------*/
+        case CHANGE_MENU_CALI:
+        reflow_pfnStateMachine = calibrate_Array[index + cursor.row];
+        if (reflow_pfnStateMachine == reflowSM_Main)
+        {
+            nextState = WAIT_FOR_RELEASE_CALI;
+            /* reset variables */
+            index = 0;
+            cursor.row = 0;
+        }
+        else    // will remain in this function pointer state machine.
+        {
+            nextState = SETUP;
+        }
+        lcd_clrscr();
+        break;
+        /*------------------------------------------------------------------------*/
+        case SETUP:
+        main_MASTER_CTRL_FLAG |= (TEMP_REQUEST | HEATER_POWERED);
+        main_MASTER_CTRL_FLAG |= REFLOW_IN_PROGRESS;
+        
+        if (main_MASTER_CTRL_FLAG & TEMP_IS_VALID)
+        {
+            startTemp = MeasureTemp_ReadAverage();
+            reflow_startTime = reflow_systemSeconds;
+            nextState = START_PREHEAT;
+        }
+        break;
+        /*------------------------------------------------------------------------*/
+        case START_PREHEAT:
+        HeaterPercent(100);
+        nextState = RECORD_PREHEAT;
+        break;
+        /*------------------------------------------------------------------------*/
+        case RECORD_PREHEAT:
+        if ((main_MASTER_CTRL_FLAG & TEMP_IS_VALID) && MeasureTemp_ReadAverage() > 140.0)
+        {
+            stopTemp = MeasureTemp_ReadAverage();
+            HeaterPercent(0);
+            main_MASTER_CTRL_FLAG &= (~HEATER_POWERED);
+            uint32_t stopTime = reflow_systemSeconds;
+            totalTime = stopTime - reflow_startTime;
+            
+            nextState = DISPLAY_PREHEAT;
+        }
+        break;
+        /*------------------------------------------------------------------------*/
+        case DISPLAY_PREHEAT:
+        degPerSecond = (stopTemp - startTemp)/totalTime;
+        dtostrf(degPerSecond, -5, 1, tempString);
+        lcd_gotoxy(0,1);
+        lcd_puts_P("degC/s: ");
+        lcd_puts(tempString);
+        
+        nextState = DONE;
+        break;
+        /*------------------------------------------------------------------------*/
+        case DONE:
+        if (WasEncoderPressed())
+        {
+            EncoderPushAck();
+            reflow_pfnStateMachine = reflowSM_Main;
+            nextState = WAIT_FOR_RELEASE_CALI;
+            /* reset variables */
+            index = 0;
+            cursor.row = 0;
+        }
+        break;
+    }
+    currentState = nextState;
+}
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+/* Under Profile Select     */
 static void reflowSM_ProfBack()
 {
     reflow_pfnStateMachine = reflowSM_Main;
 }
 
+/* Under Profile Select     */
 static void reflowSM_Leaded()
 {
     
 }
 
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+/* Under Profile Select     */
 static void reflowSM_PbFree()
 {
+    static uint8_t index = 0;
+
+    static menuSwitch currentState = WAIT_FOR_RELEASE;
+    menuSwitch nextState = currentState;
     
+    switch (currentState)
+    {
+        case WAIT_FOR_RELEASE:
+        if (IsEncoderReleased())
+        {
+            lcd_clrscr();
+            printLines(index, profileChoice_table);
+            cursor.row = 0;
+            printCursor(&cursor);
+            
+            lcd_gotoxy(9,0);
+            lcd_puts_P("Pb-FREE");
+            
+            nextState = WAIT_FOR_ENCODER;
+        }
+        break;
+        /*------------------------------------------------------------------------*/
+        case WAIT_FOR_ENCODER:
+        if (main_MASTER_CTRL_FLAG & UPDATE_ENCODER)
+        {   /* Clear the UPDATE_ENCODER flag    */
+            main_MASTER_CTRL_FLAG &= (~UPDATE_ENCODER);
+            
+            if (WasEncoderTurnedRIGHT())
+            {
+                if (cursor.row == 1)
+                cursor.row = 0;
+                else if (index > 0)
+                {
+                    index--;
+                    printLines(index, profileChoice_table);
+                }
+                
+            }
+            else if (WasEncoderTurnedLEFT())
+            {
+                if (cursor.row == 0)
+                cursor.row = 1;
+                else if (index < PROFILE_SELECTED_ELEMENTS - 2)
+                {
+                    index++;
+                    printLines(index, profileChoice_table);
+                }
+            }
+            else if (WasEncoderPressed())
+            {
+                EncoderPushAck();
+                nextState = CHANGE_MENU;
+            }
+            EncoderTurnAck();
+            printCursor(&cursor);
+        }
+        break;
+        /*------------------------------------------------------------------------*/
+        case CHANGE_MENU:   // when leaving this state to go to outer next statemachine,
+        // currentState needs to get put back to WAIT_FOR_RELEASE!
+        reflow_pfnStateMachine = reflowPbFree_Array[index + cursor.row];
+        nextState = WAIT_FOR_RELEASE;
+        /* reset variables */
+        index = 0;
+        cursor.row = 0;
+        break;
+    }
+    currentState = nextState;
 }
 
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+/* Under Profile Select     */
 static void reflowSM_Custom()
 {
     
 }
 
-/*
-profileItems selection = BACK_MAIN;
-uint8_t updateDisplay = 0;
-char* line1;
-char* line2;
-*/
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+/* Under Leaded     */
+
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+/*  Under Pb-Free   */
+static void reflowSM_PbBack()
+{
+    reflow_pfnStateMachine = reflowSM_ProfileSelect;
+}
+
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+/*  Under Pb-Free   */
+static void reflowSM_PbInfo()
+{
+    
+}
+
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+/*  Under Pb-Free   */
+static void reflowSM_PbSetTemp()
+{
+    
+}
+
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+/*  Under Pb-Free   */
+static void reflowSM_PbSetTime()
+{
+    
+}
+
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------*/
+
+static void reflowSM_Start()
+{
+    static uint8_t index = 0;
+
+    static menuSwitch currentState = WAIT_FOR_RELEASE;
+    menuSwitch nextState = currentState;
+    
+    switch (currentState)
+    {
+        case WAIT_FOR_RELEASE:
+        if (IsEncoderReleased())
+        {
+            lcd_clrscr();
+            printLines(index, startMenu_table);
+            cursor.row = 0;
+            printCursor(&cursor);
+            
+            lcd_gotoxy(10,0);
+            lcd_puts_P("Ready?");
+            
+            nextState = WAIT_FOR_ENCODER;
+        }
+        break;
+        /*------------------------------------------------------------------------*/
+        case WAIT_FOR_ENCODER:
+        if (main_MASTER_CTRL_FLAG & UPDATE_ENCODER)
+        {   /* Clear the UPDATE_ENCODER flag    */
+            main_MASTER_CTRL_FLAG &= (~UPDATE_ENCODER);
+            
+            if (WasEncoderTurnedRIGHT())
+            {
+                if (cursor.row == 1)
+                cursor.row = 0;
+                else if (index > 0)
+                {
+                    index--;
+                    printLines(index, startMenu_table);
+                }
+                
+            }
+            else if (WasEncoderTurnedLEFT())
+            {
+                if (cursor.row == 0)
+                cursor.row = 1;
+                else if (index < START_ELEMENTS - 2)
+                {
+                    index++;
+                    printLines(index, startMenu_table);
+                }
+            }
+            else if (WasEncoderPressed())
+            {
+                EncoderPushAck();
+                nextState = CHANGE_MENU;
+            }
+            EncoderTurnAck();
+            printCursor(&cursor);
+        }
+        break;
+        /*------------------------------------------------------------------------*/
+        case CHANGE_MENU:   // when leaving this state to go to outer next statemachine,
+        // currentState needs to get put back to WAIT_FOR_RELEASE!
+        reflow_pfnStateMachine = start_Array[index + cursor.row];
+        nextState = WAIT_FOR_RELEASE;
+        /* reset variables */
+        index = 0;
+        cursor.row = 0;
+        break;
+    }
+    currentState = nextState;
+}
+
+
+static void reflowSM_Begin()
+{
+    
+}
+
+
 
 /**************************************************************************/
 /*      END OF FILE                                                       */

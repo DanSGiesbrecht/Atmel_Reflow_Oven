@@ -44,21 +44,41 @@
 #include <avr/io.h>
 
 
-#define MAIN_ELEMENTS       2
-#define PROFILE_ELEMENTS    4
+#define MAIN_ELEMENTS               3
+#define LISTED_PROFILE_ELEMENTS     4
+#define PROFILE_SELECTED_ELEMENTS   5
+#define START_ELEMENTS              2
 
 /**************************************************************************/
 /*      TYPEDEFS                                                          */
 typedef void(*fnCode_type)(void);
 
 /* Main items    */
-typedef enum {PROFILES = 0, INFO} mainItems;
+//typedef enum {PROFILES = 0, INFO} mainItems;  // unused
 
 /* Profile items */
-typedef enum {BACK_MAIN = 0, LEADED, PB_FREE, CUSTOM} profileItems;
+//typedef enum {BACK_MAIN = 0, LEADED, PB_FREE, CUSTOM} profileItems; // unused
     
-/* Profile switch-case internal */
-typedef enum {WAIT_FOR_RELEASE = 0, WAIT_FOR_ENCODER, CHANGE_MENU} profileSwitch;
+/* Menu switch-case internal */
+typedef enum {WAIT_FOR_RELEASE = 0, WAIT_FOR_ENCODER, CHANGE_MENU} menuSwitch;
+    
+/* Calibration switch-case internal */
+typedef enum {
+    WAIT_FOR_RELEASE_CALI = 0,
+    WAIT_FOR_ENCODER_CALI,
+    CHANGE_MENU_CALI,
+    SETUP,
+    START_PREHEAT,
+    RECORD_PREHEAT,
+    DISPLAY_PREHEAT,
+    //START_SOAK,
+    //RECORD_SOAK,
+    //START_REFLOWING,
+    //RECORD_REFLOWING,   // at maximum reflow temp.
+    //START_COOLING_FROM_PEAK,
+    //RECORD_COOLING
+    DONE
+    } calibrateSwitch;
 
 /**************************************************************************/
 /*      STRUCTS                                                           */
@@ -82,7 +102,7 @@ typedef struct Cursor
 /*------------------------------------------------------------------------*/
 /*      Public Functions                                                  */
 /*------------------------------------------------------------------------*/
-
+void countSeconds(uint32_t *seconds);
 
 
 /*------------------------------------------------------------------------*/
