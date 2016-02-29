@@ -7,6 +7,7 @@
 
 
 #include "HeaterControl.h"
+#include "TemperatureMonitor.h"
 #include "ATMEGA328P_reflow_config.h"
 
 /**************************************************************************/
@@ -23,7 +24,6 @@ typedef void(*fnCode_type)(void);
 extern volatile uint16_t   main_MASTER_CTRL_FLAG; // reflow_oven_main.c
 extern volatile uint32_t    reflow_systemSeconds; // reflow_app.c
 
-
 /**************************************************************************/
 /**************************************************************************/
 /*      Global Variable definitions with scope limited to this local
@@ -39,14 +39,28 @@ static double HeaterOnTime = 0;
 static double HeaterOnTime_BUFFER = 0;
 #define HEATER_PERIOD   1000    // 2sec (2ms period)
 
-static double _heater_goalTemp = 0;
-static double _heater_degPerSecond = 0;
-static double _heater_startTime = 0;
+/* For heaterControl State Machine */
+static double   _heater_goalTemp = 0;
+static double   _heater_degPerSecond = 0;
+static uint32_t _heater_startTime = 0;
+static uint32_t initCounter = 0;
+static double   _heater_startTemp = 0;
+static uint8_t  percentToHeat = 0;
 
 /**************************************************************************/
 /*      Static Function Prototypes                                        */
 /**************************************************************************/
+static void HeaterControlSM_Idle();
 
+static void HeaterControlSM_Setup();
+
+static void HeaterControlSM_AdjustHeat();
+
+static void HeaterControlSM_Wait2s();
+
+static void HeaterControlSM_GetTempCalculate();
+
+/**************************************************************************/
 /* Turn the heater on or off. */
 typedef enum { HEATER_OFF = 0, HEATER_ON } HeaterSetting;
 static void HeaterSet(HeaterSetting status);
@@ -122,7 +136,7 @@ void HeaterPercent(double percent)
 /*------------------------------------------------------------------------*/
 void HeaterControl_Initialize()
 {
-    //HeaterControl_pfnStateMachine = IDLESTATENAME;
+    HeaterControl_pfnStateMachine = HeaterControlSM_Idle;
 }
 
 void HeaterControl_ActiveState()
@@ -166,9 +180,100 @@ static void HeaterSet(HeaterSetting status)
 
 static void HeaterControlSM_Idle()
 {
-    
+    HeaterPercent(0);
+    if (_heater_goalTemp != 0 && _heater_degPerSecond != 0)
+    {
+        HeaterControl_pfnStateMachine = HeaterControlSM_Setup;
+    }
 }
 
+static void HeaterControlSM_Setup()
+{
+    main_MASTER_CTRL_FLAG |= (TEMP_REQUEST);
+    if (main_MASTER_CTRL_FLAG & TEMP_IS_VALID)
+    {
+        main_MASTER_CTRL_FLAG &= ~(TEMP_REQUEST | TEMP_IS_VALID);
+        _heater_startTemp = MeasureTemp_ReadAverage();
+        
+        if (_heater_degPerSecond > 0)
+        {
+            percentToHeat = _heater_degPerSecond * 100;
+        }
+        HeaterControl_pfnStateMachine = HeaterControlSM_AdjustHeat;
+    }
+}
+
+static void HeaterControlSM_AdjustHeat()
+{
+    HeaterPercent(percentToHeat);
+    initCounter = reflow_systemSeconds;
+    HeaterControl_pfnStateMachine = HeaterControlSM_Wait2s;
+}
+
+static void HeaterControlSM_Wait2s()
+{
+    if ((reflow_systemSeconds - initCounter) >= 2)
+    {
+        HeaterControl_pfnStateMachine = HeaterControlSM_GetTempCalculate;
+    }
+}
+
+static void HeaterControlSM_GetTempCalculate()
+{
+    main_MASTER_CTRL_FLAG |= (TEMP_REQUEST);
+    if (main_MASTER_CTRL_FLAG & TEMP_IS_VALID)
+    {
+        main_MASTER_CTRL_FLAG &= ~(TEMP_REQUEST | TEMP_IS_VALID);
+        //double currentTemp = MeasureTemp_ReadAverage();
+        
+        double degPerSec = (MeasureTemp_ReadAverage() - _heater_startTemp)/(reflow_systemSeconds - _heater_startTime);
+        
+        if ( MeasureTemp_ReadAverage() >= _heater_goalTemp - 5) // goal almost reached!
+        {
+            percentToHeat = 0;  // turn off the heating elements early, to allow for delayed heating.
+            if (MeasureTemp_ReadAverage() >= _heater_goalTemp)  // goal reached!
+                HeaterControl_pfnStateMachine = HeaterControlSM_Idle;
+        }
+        else if (_heater_degPerSecond >= 0)
+        {
+            HeaterControl_pfnStateMachine = HeaterControlSM_AdjustHeat;
+            if ( degPerSec > _heater_degPerSecond + 2)
+            {
+                percentToHeat = 0;
+            }
+            else if (degPerSec > _heater_degPerSecond + 1)
+            {
+                if (!(percentToHeat <= 0))
+                percentToHeat -= 30;
+            }
+            else if (degPerSec > _heater_degPerSecond + 0.5)
+            {
+                if (!(percentToHeat <= 0))
+                percentToHeat -= 10;
+            }
+        }
+        else    // _heater_degPerSecond < 0
+        {
+            HeaterControl_pfnStateMachine = HeaterControlSM_AdjustHeat;
+            if (degPerSec > _heater_degPerSecond - 0.5)
+            {
+                if (!(percentToHeat >= 100))
+                percentToHeat += 10;
+            }
+            else if (degPerSec > _heater_degPerSecond - 1)
+            {
+                if (!(percentToHeat <= 0))
+                percentToHeat += 30;
+            }
+            else if (degPerSec > _heater_degPerSecond - 2)
+            {
+                if (!(percentToHeat <= 0))
+                percentToHeat = 100;
+            }
+        }
+        
+    }
+}
 
 /*--------------------------------------------------------------------------------------------------*/
 /*      HEATER PWM STATE MACHINE
@@ -246,3 +351,7 @@ static void HeaterControlSM_Idle()
          Count++;
      }
  }
+ 
+ /**************************************************************************/
+ /*      END OF FILE                                                       */
+ /**************************************************************************/
