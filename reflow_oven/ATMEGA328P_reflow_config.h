@@ -83,11 +83,11 @@
 #define TEMP_IS_VALID           0x0002      //  validate temperature.
 #define HEATER_POWERED          0x0004      //  enable/disable heating.
 #define UPDATE_ENCODER          0x0008
-//                              0x0010
-//                              0x0020
-//                              0x0040
-//                              0x0080
-//                              0x0100
+#define GOALTEMP_REACHED        0x0010
+//#define                         0x0020
+//#define                         0x0040
+//#define                         0x0080
+//#define                         0x0100
 //                              0x0200
 //                              ......
 #define REFLOW_IN_PROGRESS      0x8000      //  enable/cancel a reflow proc.
