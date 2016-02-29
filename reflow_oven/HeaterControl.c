@@ -37,7 +37,8 @@ static fnCode_type HeaterPWM_pfnStateMachine;
 
 static double HeaterOnTime = 0;
 static double HeaterOnTime_BUFFER = 0;
-#define HEATER_PERIOD   1000    // 2sec (2ms period)
+//#define HEATER_PERIOD   1000    // 2sec (2ms period)
+#define HEATER_PERIOD     500     // 1sec (2ms period)
 
 /* For heaterControl State Machine */
 volatile static double   _heater_goalTemp = 0;
@@ -194,7 +195,7 @@ static void HeaterControlSM_Setup()
     {
         main_MASTER_CTRL_FLAG &= ~(TEMP_REQUEST | TEMP_IS_VALID);
         _heater_startTemp = MeasureTemp_ReadAverage();
-        
+        percentToHeat = 0;
         if (_heater_degPerSecond > 0)
         {
             if (_heater_degPerSecond > 1)
@@ -231,55 +232,169 @@ static void HeaterControlSM_GetTempCalculate()
         
         double degPerSec = (MeasureTemp_ReadAverage() - _heater_startTemp)/(reflow_systemSeconds - _heater_startTime);
         
-        if ( MeasureTemp_ReadAverage() >= _heater_goalTemp - 5) // goal almost reached!
+        if (_heater_degPerSecond >= 0)
         {
-            percentToHeat = 0;  // turn off the heating elements early, to allow for delayed heating.
-            
-            if (MeasureTemp_ReadAverage() >= _heater_goalTemp)  // goal reached! set main flag!
+            if ( MeasureTemp_ReadAverage() >= _heater_goalTemp - 5) // goal almost reached!
             {
-                main_MASTER_CTRL_FLAG |= GOALTEMP_REACHED;
-                HeaterControl_pfnStateMachine = HeaterControlSM_Idle;
-            }                
-        }
-        else if (_heater_degPerSecond >= 0)
-        {
-            HeaterControl_pfnStateMachine = HeaterControlSM_AdjustHeat;
-            if ( degPerSec > _heater_degPerSecond + 2)
-            {
-                percentToHeat = 0;
-            }
-            else if (degPerSec > _heater_degPerSecond + 1)
-            {
-                if (!(percentToHeat <= 0))
-                percentToHeat -= 30;
-            }
-            else if (degPerSec > _heater_degPerSecond + 0.5)
-            {
-                if (!(percentToHeat <= 0))
-                percentToHeat -= 10;
+                percentToHeat = 0;  // turn off the heating elements early, to allow for delayed heating.
+                
+                if (MeasureTemp_ReadAverage() >= _heater_goalTemp)  // goal reached! set main flag!
+                {
+                    main_MASTER_CTRL_FLAG |= GOALTEMP_REACHED;
+                    HeaterControl_pfnStateMachine = HeaterControlSM_Idle;
+                    return;
+                }
             }
         }
         else    // _heater_degPerSecond < 0
         {
-            HeaterControl_pfnStateMachine = HeaterControlSM_AdjustHeat;
-            if (degPerSec > _heater_degPerSecond - 0.5)
+            if (MeasureTemp_ReadAverage() <= _heater_goalTemp)  // goal reached! set main flag!
             {
-                if (!(percentToHeat >= 100))
-                percentToHeat += 10;
+                percentToHeat = 0;  // precautionary.
+                main_MASTER_CTRL_FLAG |= GOALTEMP_REACHED;
+                HeaterControl_pfnStateMachine = HeaterControlSM_Idle;
+                return;
             }
-            else if (degPerSec > _heater_degPerSecond - 1)
+        }
+        HeaterControl_pfnStateMachine = HeaterControlSM_AdjustHeat;
+        /*------------------------------------------------------------------------*/
+        // Control temperature. (should work for + and - rate changes.
+        if ( degPerSec > _heater_degPerSecond + 2) // (greater than +2)
+        {
+            percentToHeat = 0;
+        }
+        else if (degPerSec > _heater_degPerSecond + 1) // (between +1 and +2)
+        {
+            if (percentToHeat >= 30)
+            percentToHeat -= 30;
+            else
+            percentToHeat = 0;
+        }
+        else if (degPerSec > _heater_degPerSecond + 0.5) // (between +0.5 and +1)
+        {
+            if (percentToHeat >= 10)
+            percentToHeat -= 10;
+            else
+            percentToHeat = 0;
+        }
+        else if (degPerSec > _heater_degPerSecond - 0.5) // (between +0.5 and -0.5) no change
+        {
+            // no change.
+        }
+        else if (degPerSec > _heater_degPerSecond - 1) //(between -1 and -0.5)
+        {
+            if (percentToHeat <= 90)
+            percentToHeat += 10;
+            else
+            percentToHeat = 100;
+        }
+        else if (degPerSec > _heater_degPerSecond -2) // (between -1 and -2)
+        {
+            if (percentToHeat <= 70)
+            percentToHeat += 30;
+            else
+            percentToHeat = 100;
+        }
+        else if (degPerSec <= _heater_degPerSecond - 2) // (less than -2)
+        {
+            percentToHeat = 100;
+        }
+        /*------------------------------------------------------------------------*/
+        
+        
+        /*
+        if (_heater_degPerSecond >= 0)
+        {
+            if ( MeasureTemp_ReadAverage() >= _heater_goalTemp - 5) // goal almost reached!
             {
-                if (!(percentToHeat <= 0))
-                percentToHeat += 30;
+                percentToHeat = 0;  // turn off the heating elements early, to allow for delayed heating.
+                
+                if (MeasureTemp_ReadAverage() >= _heater_goalTemp)  // goal reached! set main flag!
+                {
+                    main_MASTER_CTRL_FLAG |= GOALTEMP_REACHED;
+                    HeaterControl_pfnStateMachine = HeaterControlSM_Idle;
+                    return;
+                }
+            }
+            else
+                HeaterControl_pfnStateMachine = HeaterControlSM_AdjustHeat;
+            
+            if ( degPerSec > _heater_degPerSecond + 2) // (greater than +2)
+            {
+                percentToHeat = 0;
+            }
+            else if (degPerSec > _heater_degPerSecond + 1) // (between +1 and +2)
+            {
+                if (percentToHeat >= 30)
+                    percentToHeat -= 30;
+                else
+                    percentToHeat = 0;
+            }
+            else if (degPerSec > _heater_degPerSecond + 0.5) // (between +0.5 and +1)
+            {
+                if (percentToHeat >= 10)
+                    percentToHeat -= 10;
+                else
+                    percentToHeat = 0;
+            }
+            else if (degPerSec > _heater_degPerSecond - 0.5) // (between +0.5 and -0.5) no change
+            {
+                // no change.
+            }
+            else if (degPerSec > _heater_degPerSecond - 1) //(between -1 and -0.5)
+            {
+                if (percentToHeat <= 90)
+                    percentToHeat += 10;
+                else
+                    percentToHeat = 100;
+            }
+            else if (degPerSec > _heater_degPerSecond -2) // (between -1 and -2)
+            {
+                if (percentToHeat <= 70)
+                    percentToHeat += 30;
+                else
+                    percentToHeat = 100;
+            }
+            else if (degPerSec <= _heater_degPerSecond - 2) // (less than -2)
+            {
+                percentToHeat = 100;
+            }
+        }
+        else    // _heater_degPerSecond < 0
+        {
+            if (MeasureTemp_ReadAverage() <= _heater_goalTemp)  // goal reached! set main flag!
+            {
+                percentToHeat = 0;  // precautionary.
+                main_MASTER_CTRL_FLAG |= GOALTEMP_REACHED;
+                HeaterControl_pfnStateMachine = HeaterControlSM_Idle;
+                return;
+            }
+            else
+                HeaterControl_pfnStateMachine = HeaterControlSM_AdjustHeat;
+            
+            if (degPerSec > _heater_degPerSecond - 1)
+            {
+                if (percentToHeat <= 90)
+                    percentToHeat += 10;
+                else
+                    percentToHeat = 100;
             }
             else if (degPerSec > _heater_degPerSecond - 2)
             {
-                if (!(percentToHeat <= 0))
+                if (percentToHeat <= 70)
+                    percentToHeat += 30;
+                else
+                    percentToHeat = 100;
+            }
+            else if (degPerSec <= _heater_degPerSecond - 2)
+            {
                 percentToHeat = 100;
             }
         }
         
     }
+    */
+    }        
 }
 
 /*--------------------------------------------------------------------------------------------------*/

@@ -87,6 +87,7 @@ typedef enum {
 typedef enum {
     WAIT_FOR_RELEASE_PROC = 0,
     INITIALIZE,
+    PREP_ELEMENTS,
     START_PREHEAT_PROC,
     PREHEATING_PROC,
     START_SOAK_PROC,

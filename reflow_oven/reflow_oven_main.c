@@ -127,11 +127,11 @@ int main()
         because there is no fan connected yet, and there is no other unused onboard LED
         */
         // Turn off LED before sleeping.
-        FanSet(FAN_OFF);
+        //FanSet(FAN_OFF);
         // sleep for remainder of 1ms.
         Enter_Sleep_Mode(1);
         // Turn on LED after sleeping.
-        FanSet(FAN_ON);
+        //FanSet(FAN_ON);
         /************************************/
         
     }// end while(1);

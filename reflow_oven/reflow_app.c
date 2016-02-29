@@ -907,16 +907,24 @@ static void reflowSM_Begin()
         }
         /* every time HeaterConfig() is called, the GOALTEMP_REACHED flag is cleared by default. =) */
         main_MASTER_CTRL_FLAG |= (HEATER_POWERED | REFLOW_IN_PROGRESS); // if REFLOW_IN_PROGRESS gets cleared,
-        nextState = START_PREHEAT_PROC;                                 // checkToKillProcess() will reset the
+        nextState = PREP_ELEMENTS;                                      // checkToKillProcess() will reset the
                                                                         // switch-case state machine.
         lcd_gotoxy(0,0);
         lcd_puts_P("PREHEATING...");
+        //HeaterPercent(100); // heat up the elements before calling HeaterConfig()
         break;
         
+        case PREP_ELEMENTS:
+        HeaterConfig(50,1,reflow_systemSeconds);    // aim to preheat the elements to 50C before starting.
+        nextState = START_PREHEAT_PROC;
+        break;
         
         case START_PREHEAT_PROC:
-        HeaterConfig(preheatGoalTemp, preheatRate, reflow_systemSeconds);
-        nextState = PREHEATING_PROC;
+        if (main_MASTER_CTRL_FLAG & GOALTEMP_REACHED)   // HeaterConfig() clears the goaltemp flag.
+        {
+            HeaterConfig(preheatGoalTemp, preheatRate, reflow_systemSeconds);
+            nextState = PREHEATING_PROC;
+        }            
         break;
         
         case PREHEATING_PROC:
@@ -924,7 +932,7 @@ static void reflowSM_Begin()
         {
             nextState = START_SOAK_PROC;
             lcd_gotoxy(0,0);
-            lcd_puts_P("SOAKING...");
+            lcd_puts_P("SOAKING...   ");
         }            
         break;
         
@@ -938,7 +946,7 @@ static void reflowSM_Begin()
         {
             nextState = START_REFLOW_PROC;
             lcd_gotoxy(0,0);
-            lcd_puts_P("REFLOWING...");
+            lcd_puts_P("REFLOWING... ");
         }
         break; 
         
@@ -951,12 +959,14 @@ static void reflowSM_Begin()
         if ( main_MASTER_CTRL_FLAG & GOALTEMP_REACHED)
         {
             nextState = START_COOL1_PROC;
-            // no need to reprint screen. this is still part of the reflow.
+            lcd_gotoxy(0,0);
+            lcd_puts_P("BEGIN COOLDOWN");
         }
         break;
         
         case START_COOL1_PROC:
         HeaterConfig(cool1GoalTemp, cool1Rate, reflow_systemSeconds);
+        FanSet(FAN_ON);
         nextState = COOLING1_PROC;
         break;
         
@@ -965,7 +975,7 @@ static void reflowSM_Begin()
         {
             nextState = START_COOL2_PROC;
             lcd_gotoxy(0,0);
-            lcd_puts_P("COOLING...");
+            lcd_puts_P("COOLING...    ");
         }
         break;
         
@@ -979,12 +989,14 @@ static void reflowSM_Begin()
         {
             nextState = DONE_PROC;
             lcd_gotoxy(0,0);
-            lcd_puts_P("DONE!");
+            lcd_puts_P("DONE!        ");
         }
         break;
         
         case DONE_PROC:
         /* if button pressed, go to main menu? */
+        FanSet(FAN_OFF);
+        HeaterPercent(0);
         break;
     }               
     currentState = nextState;
