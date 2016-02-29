@@ -20,7 +20,8 @@ typedef void(*fnCode_type)(void);
 
 /**************************************************************************/
 /*      Global Variables that are !exteral!                               */
-extern volatile uint16_t   main_MASTER_CTRL_FLAG;
+extern volatile uint16_t   main_MASTER_CTRL_FLAG; // reflow_oven_main.c
+extern volatile uint32_t    reflow_systemSeconds; // reflow_app.c
 
 
 /**************************************************************************/
@@ -37,6 +38,10 @@ static fnCode_type HeaterPWM_pfnStateMachine;
 static double HeaterOnTime = 0;
 static double HeaterOnTime_BUFFER = 0;
 #define HEATER_PERIOD   1000    // 2sec (2ms period)
+
+static double _heater_goalTemp = 0;
+static double _heater_degPerSecond = 0;
+static double _heater_startTime = 0;
 
 /**************************************************************************/
 /*      Static Function Prototypes                                        */
@@ -88,8 +93,17 @@ void FanSet(FanSetting status)
     uint8_t protectREG = FAN_PORT & (~ (1 << FAN_PIN) );
     FAN_PORT = protectREG | (status << FAN_PIN);
 }
-
-/*      test function                                                     */
+/*------------------------------------------------------------------------*/
+/* Settings used for Heater Control */
+void HeaterConfig(double goalTemp, double degPerSecond, uint32_t startTime)
+{
+    main_MASTER_CTRL_FLAG &= ~(GOALTEMP_REACHED);   // make sure that this flag is clear.
+    _heater_goalTemp = goalTemp;
+    _heater_degPerSecond = degPerSecond;
+    _heater_startTime = startTime;
+}
+/*------------------------------------------------------------------------*/
+/*                                                                        */
 void HeaterPercent(double percent)
 {
     double temp_percent = 0;
@@ -150,8 +164,13 @@ static void HeaterSet(HeaterSetting status)
  *      needs to calculate the temperature required.
  */
 
+static void HeaterControlSM_Idle()
+{
+    
+}
 
 
+/*--------------------------------------------------------------------------------------------------*/
 /*      HEATER PWM STATE MACHINE
  *
  *      This state machine directly manipulates the length of time that the

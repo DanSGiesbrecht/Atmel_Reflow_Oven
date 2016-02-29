@@ -25,6 +25,9 @@ void Fan_Init();
 typedef enum { FAN_OFF = 0, FAN_ON } FanSetting;
 void FanSet(FanSetting status);
 
+/* Configuring the temperature conditions for the reflow. */
+void HeaterConfig(double goalTemp, double degPerSecond, uint32_t startTime);
+
 /* Duty cycle of the heater. Must be 10 < percentage < 90; or =0,100      */
 void HeaterPercent(double percent);
 /*------------------------------------------------------------------------*/
