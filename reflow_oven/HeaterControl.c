@@ -40,9 +40,9 @@ static double HeaterOnTime_BUFFER = 0;
 #define HEATER_PERIOD   1000    // 2sec (2ms period)
 
 /* For heaterControl State Machine */
-static double   _heater_goalTemp = 0;
-static double   _heater_degPerSecond = 0;
-static uint32_t _heater_startTime = 0;
+volatile static double   _heater_goalTemp = 0;
+volatile static double   _heater_degPerSecond = 0;
+volatile static uint32_t _heater_startTime = 0;
 static uint32_t initCounter = 0;
 static double   _heater_startTemp = 0;
 static uint8_t  percentToHeat = 0;
@@ -197,7 +197,10 @@ static void HeaterControlSM_Setup()
         
         if (_heater_degPerSecond > 0)
         {
-            percentToHeat = _heater_degPerSecond * 100;
+            if (_heater_degPerSecond > 1)
+                percentToHeat = 100;
+            else
+                percentToHeat = _heater_degPerSecond * 100;
         }
         HeaterControl_pfnStateMachine = HeaterControlSM_AdjustHeat;
     }
@@ -231,8 +234,12 @@ static void HeaterControlSM_GetTempCalculate()
         if ( MeasureTemp_ReadAverage() >= _heater_goalTemp - 5) // goal almost reached!
         {
             percentToHeat = 0;  // turn off the heating elements early, to allow for delayed heating.
-            if (MeasureTemp_ReadAverage() >= _heater_goalTemp)  // goal reached!
+            
+            if (MeasureTemp_ReadAverage() >= _heater_goalTemp)  // goal reached! set main flag!
+            {
+                main_MASTER_CTRL_FLAG |= GOALTEMP_REACHED;
                 HeaterControl_pfnStateMachine = HeaterControlSM_Idle;
+            }                
         }
         else if (_heater_degPerSecond >= 0)
         {

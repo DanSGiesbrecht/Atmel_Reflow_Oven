@@ -91,7 +91,10 @@ static fnCode_type reflow_pfnStateMachine;
 /*------------------------------------------------------------------------*/
 /*      Other Variables.                                                  */
 
-volatile uint32_t    reflow_systemSeconds;
+uint32_t    reflow_systemSeconds;           // extern volatile when used outside of this file.
+                                            // Manipulated by countSeconds().
+                                            // future: use proper hardware timer. (or RTC?)
+                                            
 volatile uint32_t reflow_startTime;         // potentially obsolete.  start time gets passed
                                             // to heaterControl.c via HeaterConfig().
 
@@ -300,6 +303,9 @@ static void reflowSM_Boot()
     {
         /* When 4 seconds has passed, change states. */
         reflow_pfnStateMachine = reflowSM_Main;
+        /* set index to 0 for next state machine */
+        index = 0;
+        
         updateWholeDisplay = 1;
         count = 0;
         return; // avoids count incrementing.
@@ -309,11 +315,10 @@ static void reflowSM_Boot()
 /*------------------------------------------------------------------------*/
 static void reflowSM_Main()
 {
-    index = 0;
-
     static menuSwitch currentState = WAIT_FOR_RELEASE;
     menuSwitch nextState = currentState;
-    
+ 
+    // index set to 0 in previous state.
     switch (currentState)
     {
         case WAIT_FOR_RELEASE:
@@ -370,6 +375,8 @@ static void reflowSM_Main()
         case CHANGE_MENU:   // when leaving this state to go to outer next statemachine,
         // currentState needs to get put back to WAIT_FOR_RELEASE!
         reflow_pfnStateMachine = reflowMain_Array[index + cursor.row];
+        /* set index to 0 for next state */
+        index = 0;
         nextState = WAIT_FOR_RELEASE;
         /* reset variables */
         index = 0;
@@ -385,8 +392,7 @@ static void reflowSM_Main()
 /*  Under Main  */
 static void reflowSM_ProfileSelect()
 {
-    index = 0;
-
+    // index set to 0 in previous state machine.
     static menuSwitch currentState = WAIT_FOR_RELEASE;
     menuSwitch nextState = currentState;
     
@@ -475,8 +481,8 @@ static void reflowSM_Calibrate()
     
     static double  totalTime  = 0;
     
-    index = 0;
-
+    //index = 0;
+    /* index set to 0 in previous state */
     static calibrateSwitch currentState = WAIT_FOR_RELEASE_CALI;
     calibrateSwitch nextState = currentState;
     
@@ -623,7 +629,8 @@ static void reflowSM_Leaded()
 /* Under Profile Select     */
 static void reflowSM_PbFree()
 {
-    index = 0;
+    //index = 0; now global
+    // index set to 0 in previous state machine.
 
     static menuSwitch currentState = WAIT_FOR_RELEASE;
     menuSwitch nextState = currentState;
@@ -748,7 +755,8 @@ static void reflowSM_PbSetTime()
 
 static void reflowSM_Start()
 {
-    index = 0;
+    //index = 0;
+    // index set to 0 in previous state machine.
 
     static menuSwitch currentState = WAIT_FOR_RELEASE;
     menuSwitch nextState = currentState;
@@ -900,7 +908,10 @@ static void reflowSM_Begin()
         /* every time HeaterConfig() is called, the GOALTEMP_REACHED flag is cleared by default. =) */
         main_MASTER_CTRL_FLAG |= (HEATER_POWERED | REFLOW_IN_PROGRESS); // if REFLOW_IN_PROGRESS gets cleared,
         nextState = START_PREHEAT_PROC;                                 // checkToKillProcess() will reset the
-        break;                                                          // switch-case state machine.
+                                                                        // switch-case state machine.
+        lcd_gotoxy(0,0);
+        lcd_puts_P("PREHEATING...");
+        break;
         
         
         case START_PREHEAT_PROC:
@@ -912,6 +923,8 @@ static void reflowSM_Begin()
         if ( main_MASTER_CTRL_FLAG & GOALTEMP_REACHED)
         {
             nextState = START_SOAK_PROC;
+            lcd_gotoxy(0,0);
+            lcd_puts_P("SOAKING...");
         }            
         break;
         
@@ -924,6 +937,8 @@ static void reflowSM_Begin()
         if ( main_MASTER_CTRL_FLAG & GOALTEMP_REACHED)
         {
             nextState = START_REFLOW_PROC;
+            lcd_gotoxy(0,0);
+            lcd_puts_P("REFLOWING...");
         }
         break; 
         
@@ -936,6 +951,7 @@ static void reflowSM_Begin()
         if ( main_MASTER_CTRL_FLAG & GOALTEMP_REACHED)
         {
             nextState = START_COOL1_PROC;
+            // no need to reprint screen. this is still part of the reflow.
         }
         break;
         
@@ -948,6 +964,8 @@ static void reflowSM_Begin()
         if ( main_MASTER_CTRL_FLAG & GOALTEMP_REACHED)
         {
             nextState = START_COOL2_PROC;
+            lcd_gotoxy(0,0);
+            lcd_puts_P("COOLING...");
         }
         break;
         
@@ -960,6 +978,8 @@ static void reflowSM_Begin()
         if ( main_MASTER_CTRL_FLAG & GOALTEMP_REACHED)
         {
             nextState = DONE_PROC;
+            lcd_gotoxy(0,0);
+            lcd_puts_P("DONE!");
         }
         break;
         

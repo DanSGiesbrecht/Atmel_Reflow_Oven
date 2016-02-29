@@ -49,6 +49,7 @@ volatile uint16_t    main_MASTER_CTRL_FLAG = 0;
 extern volatile int         encoderValue;
 extern volatile uint32_t    reflow_systemSeconds;
 extern volatile uint32_t reflow_startTime;
+
 /**************************************************************************/
 /* MACROS                                                                 */
 #ifndef __DDR_MACROS__
@@ -84,6 +85,7 @@ int main()
 /*------------------------------------------------------------------------*/
     MeasureTemp_Initialize();
     HeaterPWM_Initialize();
+    HeaterControl_Initialize();
     reflow_Initialize();
 /*------------------------------------------------------------------------*/
 /*      Start the System Tick.                                            */
@@ -95,14 +97,21 @@ int main()
         /* Run state Machines */
         MeasureTemp_ActiveState();
         HeaterPWM_ActiveState();
+        HeaterControl_ActiveState();
         reflow_ActiveState();
         
+        static uint8_t runOnce = 1;
         static uint16_t counter = 0;
         if ((main_MASTER_CTRL_FLAG & REFLOW_IN_PROGRESS) && counter > 499)
         {
+            if (runOnce)
+            {
+                reflow_startTime = reflow_systemSeconds;
+                runOnce = 0;
+            }
             counter = 0;
             char tempString[6];
-            lcd_gotoxy(0,0);
+            lcd_gotoxy(0,1);
             lcd_puts_P("deg:");
             dtostrf(MeasureTemp_ReadAverage(),-5,1,tempString);
             lcd_puts(tempString);
