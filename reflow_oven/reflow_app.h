@@ -58,7 +58,10 @@ typedef void(*fnCode_type)(void);
 
 /* Profile items */
 //typedef enum {BACK_MAIN = 0, LEADED, PB_FREE, CUSTOM} profileItems; // unused
-    
+
+/* Profile Selected Enum! */
+typedef enum {LEADED = 0, PBFREE, CUSTOM} profileChosen;
+
 /* Menu switch-case internal */
 typedef enum {WAIT_FOR_RELEASE = 0, WAIT_FOR_ENCODER, CHANGE_MENU} menuSwitch;
     
@@ -79,6 +82,23 @@ typedef enum {
     //RECORD_COOLING
     DONE
     } calibrateSwitch;
+
+/*  Used by reflowSM_Begin()    */    
+typedef enum {
+    WAIT_FOR_RELEASE_PROC = 0,
+    INITIALIZE,
+    START_PREHEAT_PROC,
+    PREHEATING_PROC,
+    START_SOAK_PROC,
+    SOAKING_PROC,
+    START_REFLOW_PROC,
+    REFLOWING_PROC,
+    START_COOL1_PROC,
+    COOLING1_PROC,
+    START_COOL2_PROC,
+    COOLING2_PROC,
+    DONE_PROC
+    } reflowSwitch;
 
 /**************************************************************************/
 /*      STRUCTS                                                           */
@@ -112,7 +132,7 @@ void reflow_Initialize();
 
 void reflow_ActiveState();
 
-
+void checkToKillProcess(); // currently, only used for ReflowSM_Begin()
 #endif
 /**************************************************************************/
 /*                         END OF FILE                                    */

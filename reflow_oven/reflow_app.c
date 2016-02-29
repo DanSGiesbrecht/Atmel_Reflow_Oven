@@ -89,14 +89,20 @@ extern volatile uint16_t    main_MASTER_CTRL_FLAG;
 static fnCode_type reflow_pfnStateMachine;
 
 /*------------------------------------------------------------------------*/
+/*      Other Variables.                                                  */
+
 volatile uint32_t    reflow_systemSeconds;
-volatile uint32_t reflow_startTime;
+volatile uint32_t reflow_startTime;         // potentially obsolete.  start time gets passed
+                                            // to heaterControl.c via HeaterConfig().
 
 
-static uint8_t updateWholeDisplay;
+static uint8_t updateWholeDisplay; // unused?
+
+/*!*/
+static profileChosen reflowProfileToUse;
 
 static Cursor cursor = {.icon = '<', .x_position = 8, .row = 0};
-
+static uint8_t index;
 /*!!!!!!!!!!!!!!!!!!!!!!!!*/
 /* PROGRAM MEMORY STRINGS */
 /*!!!!!!!!!!!!!!!!!!!!!!!!*/
@@ -303,7 +309,7 @@ static void reflowSM_Boot()
 /*------------------------------------------------------------------------*/
 static void reflowSM_Main()
 {
-    static uint8_t index = 0;
+    index = 0;
 
     static menuSwitch currentState = WAIT_FOR_RELEASE;
     menuSwitch nextState = currentState;
@@ -379,7 +385,7 @@ static void reflowSM_Main()
 /*  Under Main  */
 static void reflowSM_ProfileSelect()
 {
-    static uint8_t index = 0;
+    index = 0;
 
     static menuSwitch currentState = WAIT_FOR_RELEASE;
     menuSwitch nextState = currentState;
@@ -469,7 +475,7 @@ static void reflowSM_Calibrate()
     
     static double  totalTime  = 0;
     
-    static uint8_t index = 0;
+    index = 0;
 
     static calibrateSwitch currentState = WAIT_FOR_RELEASE_CALI;
     calibrateSwitch nextState = currentState;
@@ -617,7 +623,7 @@ static void reflowSM_Leaded()
 /* Under Profile Select     */
 static void reflowSM_PbFree()
 {
-    static uint8_t index = 0;
+    index = 0;
 
     static menuSwitch currentState = WAIT_FOR_RELEASE;
     menuSwitch nextState = currentState;
@@ -677,6 +683,10 @@ static void reflowSM_PbFree()
         /*------------------------------------------------------------------------*/
         case CHANGE_MENU:   // when leaving this state to go to outer next statemachine,
         // currentState needs to get put back to WAIT_FOR_RELEASE!
+        
+        // select your desired profile when leaving this state machine.
+        reflowProfileToUse = PBFREE;
+        
         reflow_pfnStateMachine = reflowPbFree_Array[index + cursor.row];
         nextState = WAIT_FOR_RELEASE;
         /* reset variables */
@@ -738,7 +748,7 @@ static void reflowSM_PbSetTime()
 
 static void reflowSM_Start()
 {
-    static uint8_t index = 0;
+    index = 0;
 
     static menuSwitch currentState = WAIT_FOR_RELEASE;
     menuSwitch nextState = currentState;
@@ -809,10 +819,156 @@ static void reflowSM_Start()
 }
 
 
+/*------------------------------------------------------------------------*/
+
+void checkToKillProcess(reflowSwitch *nextState)
+{
+    if (! (main_MASTER_CTRL_FLAG & REFLOW_IN_PROGRESS))
+    {   /* IF THE REFLOW HAS BEEN CANCELLED BY ANYTHING EXTERNAL */
+        main_MASTER_CTRL_FLAG &= ~(HEATER_POWERED); // redundancy department of redundancy.
+        *nextState = DONE_PROC;
+    }
+}
 static void reflowSM_Begin()
 {
+    static double preheatGoalTemp = 0;
+    static double preheatRate = 0;
+    static double soakGoalTemp = 0;
+    static double soakRate = 0;
+    static double reflowGoalTemp = 0;
+    static double reflowRate = 0;  
+    static double cool1GoalTemp = 0;    // coming off reflow peak.
+    static double cool1Rate = 0;
+    static double cool2GoalTemp = 0;
+    static double cool2Rate = 0;
     
-}
+    static reflowSwitch currentState = WAIT_FOR_RELEASE_PROC;
+    reflowSwitch nextState = currentState;
+    
+    if (currentState != WAIT_FOR_RELEASE_PROC)
+    {
+        checkToKillProcess(&nextState); // checks if the reflow process has been cancelled, and if so,
+                                        // set the nextState to DONE.
+    }
+    switch (currentState)
+    {
+        case WAIT_FOR_RELEASE_PROC:
+        if (IsEncoderReleased())
+        {
+            lcd_clrscr();
+            /* Print stuff related to the reflow. */
+            /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+            
+            //printLines(index, startMenu_table);
+            //cursor.row = 0;
+            //printCursor(&cursor);
+            
+            //lcd_gotoxy(10,0);
+            //lcd_puts_P("Ready?");
+            
+            nextState = INITIALIZE;
+        }
+        break;
+        
+        case INITIALIZE:
+        if (reflowProfileToUse == LEADED)
+        {
+            
+        }
+        else if (reflowProfileToUse == PBFREE)
+        {
+            preheatGoalTemp = 140.00;
+            preheatRate = 1.17;
+            
+            soakGoalTemp = 200.00;
+            soakRate = 1.00;
+            
+            reflowGoalTemp = 235.00;        // must be less than 249.00
+            reflowRate = 1.17;
+            
+            cool1GoalTemp = 219.00;
+            cool1Rate = -0.50;              // negative because the temp is decreasing.
+            
+            cool2GoalTemp = 150.00;
+            cool2Rate = -2.00;              // if this rate isn't being achieved,
+                                            //  ask for the oven door to be opened.
+        }
+        else if (reflowProfileToUse == CUSTOM)
+        {
+            
+        }
+        /* every time HeaterConfig() is called, the GOALTEMP_REACHED flag is cleared by default. =) */
+        main_MASTER_CTRL_FLAG |= (HEATER_POWERED | REFLOW_IN_PROGRESS); // if REFLOW_IN_PROGRESS gets cleared,
+        nextState = START_PREHEAT_PROC;                                 // checkToKillProcess() will reset the
+        break;                                                          // switch-case state machine.
+        
+        
+        case START_PREHEAT_PROC:
+        HeaterConfig(preheatGoalTemp, preheatRate, reflow_systemSeconds);
+        nextState = PREHEATING_PROC;
+        break;
+        
+        case PREHEATING_PROC:
+        if ( main_MASTER_CTRL_FLAG & GOALTEMP_REACHED)
+        {
+            nextState = START_SOAK_PROC;
+        }            
+        break;
+        
+        case START_SOAK_PROC:
+        HeaterConfig(soakGoalTemp, soakRate, reflow_systemSeconds);
+        nextState = SOAKING_PROC;
+        break;
+        
+        case SOAKING_PROC:
+        if ( main_MASTER_CTRL_FLAG & GOALTEMP_REACHED)
+        {
+            nextState = START_REFLOW_PROC;
+        }
+        break; 
+        
+        case START_REFLOW_PROC:
+        HeaterConfig(reflowGoalTemp, reflowRate, reflow_systemSeconds);
+        nextState = REFLOWING_PROC;
+        break;
+        
+        case REFLOWING_PROC:
+        if ( main_MASTER_CTRL_FLAG & GOALTEMP_REACHED)
+        {
+            nextState = START_COOL1_PROC;
+        }
+        break;
+        
+        case START_COOL1_PROC:
+        HeaterConfig(cool1GoalTemp, cool1Rate, reflow_systemSeconds);
+        nextState = COOLING1_PROC;
+        break;
+        
+        case COOLING1_PROC:
+        if ( main_MASTER_CTRL_FLAG & GOALTEMP_REACHED)
+        {
+            nextState = START_COOL2_PROC;
+        }
+        break;
+        
+        case START_COOL2_PROC:
+        HeaterConfig(cool2GoalTemp, cool2Rate, reflow_systemSeconds);
+        nextState = COOLING2_PROC;
+        break;
+        
+        case COOLING2_PROC:
+        if ( main_MASTER_CTRL_FLAG & GOALTEMP_REACHED)
+        {
+            nextState = DONE_PROC;
+        }
+        break;
+        
+        case DONE_PROC:
+        /* if button pressed, go to main menu? */
+        break;
+    }               
+    currentState = nextState;
+}    
 
 
 
