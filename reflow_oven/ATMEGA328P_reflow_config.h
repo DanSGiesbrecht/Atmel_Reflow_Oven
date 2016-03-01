@@ -90,6 +90,7 @@
 //#define                         0x0100
 //                              0x0200
 //                              ......
+#define ELEMENT_PREP_FINISHED   0x4000
 #define REFLOW_IN_PROGRESS      0x8000      //  enable/cancel a reflow proc.
 
 /*

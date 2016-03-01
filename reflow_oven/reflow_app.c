@@ -922,6 +922,7 @@ static void reflowSM_Begin()
         case START_PREHEAT_PROC:
         if (main_MASTER_CTRL_FLAG & GOALTEMP_REACHED)   // HeaterConfig() clears the goaltemp flag.
         {
+            main_MASTER_CTRL_FLAG |= ELEMENT_PREP_FINISHED;
             HeaterConfig(preheatGoalTemp, preheatRate, reflow_systemSeconds);
             nextState = PREHEATING_PROC;
         }            

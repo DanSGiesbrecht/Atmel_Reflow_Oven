@@ -102,7 +102,7 @@ int main()
         
         static uint8_t runOnce = 1;
         static uint16_t counter = 0;
-        if ((main_MASTER_CTRL_FLAG & REFLOW_IN_PROGRESS) && counter > 499)
+        if ((main_MASTER_CTRL_FLAG & ELEMENT_PREP_FINISHED) && counter > 499)
         {
             if (runOnce)
             {
